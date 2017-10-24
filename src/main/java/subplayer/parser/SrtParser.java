@@ -8,9 +8,10 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+
 import subplayer.Subtitle;
 
-public class SRTParser {
+public class SrtParser {
 	// States for the state machine.
 	private enum WaitFor {
 		SectionBegin, Time, Text, SectionEnd
@@ -35,7 +36,7 @@ public class SRTParser {
 					break;
 				case Time:
 					if (!line.isEmpty()) {
-						// The time line is like "00:00:01,234 --> 00:00:02,345"
+						// The time line is like "00:00:01,234 --> 00:00:02,345".
 						String[] times = line.split("-->");
 						for (int i = 0; i < 2; i++) {
 							times[i] = "PT" + times[i].trim();
