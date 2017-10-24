@@ -24,7 +24,6 @@ public class SrtParser {
 			String text = "";
 			long startTime = 0;
 			long endTime = 0;
-			Subtitle subtitle;
 			WaitFor waitingFor = WaitFor.SectionBegin;
 			while ((line = reader.readLine()) != null) {
 				line = line.trim();
@@ -64,11 +63,7 @@ public class SrtParser {
 					if (!line.isEmpty()) {
 						text += System.lineSeparator() + line;
 					} else {
-						subtitle = new Subtitle();
-						subtitle.startTime = startTime;
-						subtitle.endTime = endTime;
-						subtitle.text = text;
-						list.add(subtitle);
+						list.add(new Subtitle(startTime, endTime, text));
 						text = "";
 						waitingFor = WaitFor.SectionBegin;
 					}
