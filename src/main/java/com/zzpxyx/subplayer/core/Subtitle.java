@@ -1,4 +1,4 @@
-package subplayer;
+package com.zzpxyx.subplayer.core;
 
 public class Subtitle implements Comparable<Subtitle> {
 	public long startTime;

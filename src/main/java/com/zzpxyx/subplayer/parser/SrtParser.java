@@ -1,4 +1,4 @@
-package subplayer.parser;
+package com.zzpxyx.subplayer.parser;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import subplayer.Subtitle;
+import com.zzpxyx.subplayer.core.Subtitle;
 
 public class SrtParser {
 	// States for the state machine.
