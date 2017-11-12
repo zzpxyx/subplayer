@@ -5,8 +5,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import com.zzpxyx.subplayer.core.Subtitle;
-import com.zzpxyx.subplayer.core.SubtitleList;
 
 public class SrtParser {
 	// States for the state machine.
@@ -14,8 +17,8 @@ public class SrtParser {
 		SectionBegin, Time, Text, SectionEnd
 	}
 
-	public static SubtitleList getSubtitles(String fileName) {
-		SubtitleList list=new SubtitleList();
+	public static List<Subtitle> getSubtitles(String fileName) {
+		ArrayList<Subtitle> list = new ArrayList<>();
 		try (BufferedReader reader = Files.newBufferedReader(Paths.get(fileName))) {
 			String line;
 			String text = "";
@@ -70,7 +73,7 @@ public class SrtParser {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		list.sort();
+		Collections.sort(list);
 		return list;
 	}
 }
