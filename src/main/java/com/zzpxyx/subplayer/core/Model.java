@@ -1,5 +1,6 @@
 package com.zzpxyx.subplayer.core;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Observable;
@@ -11,8 +12,9 @@ public class Model extends Observable {
 	private ListIterator<Subtitle> subtitleListIterator;
 	private long lastStartEventSystemTimestamp;
 	private long lastSubtitleStartTime = 0;
-	private long startTimeMarker = 0;
+	// private long startTimeMarker = 0;
 	private Timer scheduler = new Timer();
+	private LinkedList<Subtitle> visibleSubtitleList = new LinkedList<>();
 
 	public Model(List<Subtitle> subtitleList) {
 		this.subtitleList = subtitleList;
@@ -40,7 +42,9 @@ public class Model extends Observable {
 				Subtitle currentSubtitle = subtitleListIterator.next();
 
 				// Display current subtitle.
-				System.out.println(currentSubtitle.text);
+				visibleSubtitleList.add(currentSubtitle);
+				setChanged();
+				notifyObservers(visibleSubtitleList);
 
 				// Calculate duration and offset.
 				long duration = currentSubtitle.endTime - currentSubtitle.startTime;
@@ -83,7 +87,9 @@ public class Model extends Observable {
 			// At this point, there may be more than one subtitle displaying.
 
 			// Erase the given subtitle.
-			System.out.println("(" + subtitleToErase.text + ")");
+			visibleSubtitleList.remove(subtitleToErase);
+			setChanged();
+			notifyObservers(visibleSubtitleList);
 		}
 	}
 }
