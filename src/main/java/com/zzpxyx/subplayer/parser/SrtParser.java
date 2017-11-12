@@ -70,7 +70,7 @@ public class SrtParser {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		list.sort();;
+		list.sort();
 		return list;
 	}
 }
