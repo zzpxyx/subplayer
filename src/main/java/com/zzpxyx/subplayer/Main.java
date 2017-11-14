@@ -14,6 +14,6 @@ public class Main {
 		Model model = new Model(subtitleList);
 		View view = new View();
 		Controller controller = new Controller(model, view);
-		controller.Play();
+		view.addController(controller);
 	}
 }
