@@ -15,35 +15,42 @@ public class Model extends Observable {
 	private long startTimeMarker = 0; // Start playing from here. The marker for the "playing cursor".
 	private Timer scheduler;
 	private LinkedList<Subtitle> visibleSubtitleList = new LinkedList<>();
+	private boolean isPlaying = false;
 
 	public Model(List<Subtitle> subtitleList) {
 		this.subtitleList = subtitleList;
 		this.subtitleListIterator = subtitleList.listIterator();
 	}
 
-	public void Play() {
-		// Treat as if resuming. A new play equals to resuming from time marker 0.
-		lastStartEventSystemTimestamp = System.currentTimeMillis() - (startTimeMarker - lastSubtitleStartTime);
-		scheduler = new Timer();
+	public void PlayOrPause() {
+		if (isPlaying) {
+			// We want to pause now.
+			isPlaying = false;
 
-		// Schedule the end events for the currently visible subtitles.
-		visibleSubtitleList.forEach(s -> scheduler.schedule(new EndEventHandler(s), s.endTime - startTimeMarker));
+			// Cancel all scheduled events.
+			scheduler.cancel();
 
-		// Schedule the next start event.
-		if (subtitleListIterator.hasNext()) {
-			int nextSubtitleIndex = subtitleListIterator.nextIndex();
-			Subtitle nextSubtitle = subtitleList.get(nextSubtitleIndex);
-			long nextStartEventDelay = nextSubtitle.startTime - startTimeMarker;
-			scheduler.schedule(new StartEventHandler(), nextStartEventDelay);
+			// Save current state.
+			startTimeMarker = System.currentTimeMillis() - lastStartEventSystemTimestamp + lastSubtitleStartTime;
+		} else {
+			// We want to play now.
+			isPlaying = true;
+
+			// Treat as if resuming. A new play equals to resuming from time marker 0.
+			lastStartEventSystemTimestamp = System.currentTimeMillis() - (startTimeMarker - lastSubtitleStartTime);
+			scheduler = new Timer();
+
+			// Schedule the end events for the currently visible subtitles.
+			visibleSubtitleList.forEach(s -> scheduler.schedule(new EndEventHandler(s), s.endTime - startTimeMarker));
+
+			// Schedule the next start event.
+			if (subtitleListIterator.hasNext()) {
+				int nextSubtitleIndex = subtitleListIterator.nextIndex();
+				Subtitle nextSubtitle = subtitleList.get(nextSubtitleIndex);
+				long nextStartEventDelay = nextSubtitle.startTime - startTimeMarker;
+				scheduler.schedule(new StartEventHandler(), nextStartEventDelay);
+			}
 		}
-	}
-
-	public void Pause() {
-		// Cancel all scheduled events.
-		scheduler.cancel();
-
-		// Save current state.
-		startTimeMarker = System.currentTimeMillis() - lastStartEventSystemTimestamp + lastSubtitleStartTime;
 	}
 
 	/**
