@@ -59,7 +59,15 @@ public class View implements Observer {
 				controller.PlayOrPause();
 			}
 		});
+		panel.getInputMap().put(KeyStroke.getKeyStroke("DOWN"), "Next");
+		panel.getActionMap().put("Next", new AbstractAction() {
+			private static final long serialVersionUID = 1L;
 
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				controller.Next();
+			}
+		});
 	}
 
 	@Override

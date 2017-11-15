@@ -17,6 +17,10 @@ public class Controller implements KeyListener {
 		model.PlayOrPause();
 	}
 
+	public void Next() {
+		model.Next();
+	}
+
 	@Override
 	public void keyPressed(KeyEvent e) {
 		if (e.getKeyCode() == KeyEvent.VK_SPACE) {

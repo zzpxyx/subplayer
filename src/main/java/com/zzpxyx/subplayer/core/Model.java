@@ -13,7 +13,7 @@ public class Model extends Observable {
 	private long lastStartEventSystemTimestamp;
 	private long lastSubtitleStartTime = 0;
 	private long startTimeMarker = 0; // Start playing from here. The marker for the "playing cursor".
-	private Timer scheduler;
+	private Timer scheduler = new Timer();
 	private LinkedList<Subtitle> visibleSubtitleList = new LinkedList<>();
 	private boolean isPlaying = false;
 
@@ -25,17 +25,15 @@ public class Model extends Observable {
 	public void PlayOrPause() {
 		if (isPlaying) {
 			// We want to pause now.
-			isPlaying = false;
-
-			// Cancel all scheduled events.
-			scheduler.cancel();
-
-			// Save current state.
-			startTimeMarker = System.currentTimeMillis() - lastStartEventSystemTimestamp + lastSubtitleStartTime;
+			Pause();
 		} else {
 			// We want to play now.
-			isPlaying = true;
+			Play();
+		}
+	}
 
+	public void Play() {
+		if (!isPlaying) {
 			// Treat as if resuming. A new play equals to resuming from time marker 0.
 			lastStartEventSystemTimestamp = System.currentTimeMillis() - (startTimeMarker - lastSubtitleStartTime);
 			scheduler = new Timer();
@@ -49,6 +47,45 @@ public class Model extends Observable {
 				Subtitle nextSubtitle = subtitleList.get(nextSubtitleIndex);
 				long nextStartEventDelay = nextSubtitle.startTime - startTimeMarker;
 				scheduler.schedule(new StartEventHandler(), nextStartEventDelay);
+			}
+
+			isPlaying = true;
+		}
+	}
+
+	public void Pause() {
+		if (isPlaying) {
+			// Cancel all scheduled events.
+			scheduler.cancel();
+
+			// Save current state.
+			startTimeMarker = System.currentTimeMillis() - lastStartEventSystemTimestamp + lastSubtitleStartTime;
+
+			isPlaying = false;
+		}
+	}
+
+	public void Next() {
+		if (subtitleListIterator.hasNext()) {
+			boolean wasPlaying = isPlaying;
+
+			// Pause the play.
+			Pause();
+
+			// Adjust start point.
+			Subtitle nextSubtitle = subtitleListIterator.next();
+			lastSubtitleStartTime = nextSubtitle.startTime;
+			startTimeMarker = nextSubtitle.startTime;
+
+			// Display next subtitle.
+			visibleSubtitleList.clear();
+			visibleSubtitleList.add(nextSubtitle);
+			setChanged();
+			notifyObservers(visibleSubtitleList);
+
+			// Resume playing if necessary.
+			if (wasPlaying) {
+				Play();
 			}
 		}
 	}
