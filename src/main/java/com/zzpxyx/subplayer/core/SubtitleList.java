@@ -4,51 +4,33 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.ListIterator;
 
-public class SubtitleList implements ListIterator<Subtitle>{
-	private ArrayList<Subtitle> list=new ArrayList<Subtitle>();
-	private int nextIndex=0;
-	
+public class SubtitleList implements ListIterator<Subtitle> {
+	private ArrayList<Subtitle> list = new ArrayList<Subtitle>();
+	private int nextIndex = 0;
+
 	@Override
-	public void add(Subtitle subtitle)
-	{
+	public void add(Subtitle subtitle) {
 		list.add(subtitle);
 	}
-	
-	public void sort()
-	{
-		Collections.sort(list);
-	}
-	
+
 	@Override
-	public boolean hasNext()
-	{
-		return nextIndex<list.size();
+	public boolean hasNext() {
+		return nextIndex < list.size();
 	}
-	
+
 	@Override
-	public boolean hasPrevious()
-	{
-		return nextIndex>0;
+	public boolean hasPrevious() {
+		return nextIndex > 0;
 	}
-	
+
 	@Override
-	public Subtitle next()
-	{
-		if (hasNext())
-		{
-			return list.get(nextIndex++);
-		}
-		return null;
+	public Subtitle next() {
+		return list.get(nextIndex++);
 	}
-	
+
 	@Override
-	public Subtitle previous()
-	{
-		if (hasPrevious())
-		{
-			return list.get(nextIndex--);
-		}
-		return null;
+	public Subtitle previous() {
+		return list.get(nextIndex--);
 	}
 
 	@Override
@@ -58,7 +40,7 @@ public class SubtitleList implements ListIterator<Subtitle>{
 
 	@Override
 	public int previousIndex() {
-		return nextIndex-1;
+		return nextIndex - 1;
 	}
 
 	@Override
@@ -69,5 +51,17 @@ public class SubtitleList implements ListIterator<Subtitle>{
 	@Override
 	public void set(Subtitle e) {
 		throw new UnsupportedOperationException();
+	}
+
+	public void sort() {
+		Collections.sort(list);
+	}
+
+	public Subtitle peekNext() {
+		return list.get(nextIndex);
+	}
+
+	public Subtitle peekPrevious() {
+		return list.get(nextIndex - 1);
 	}
 }
