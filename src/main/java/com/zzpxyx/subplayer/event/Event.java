@@ -8,6 +8,7 @@ public class Event implements Comparable<Event> {
 	public Type type;
 	public long time;
 	public String text;
+	public long elapsedSubtitleTime; // Elapsed subtitle time since previous event. Not real world time.
 
 	public Event() {
 	}

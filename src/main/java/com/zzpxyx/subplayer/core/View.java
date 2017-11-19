@@ -74,7 +74,7 @@ public class View implements Observer {
 	public void update(Observable model, Object arg) {
 		if (arg instanceof List<?>) {
 			List<?> visibleSubtitleList = (List<?>) arg;
-			text = visibleSubtitleList.stream().filter(o -> o instanceof Subtitle).map(s -> ((Subtitle) s).text)
+			text = visibleSubtitleList.stream().filter(o -> o instanceof String).map(o -> o.toString())
 					.collect(Collectors.joining(System.lineSeparator()));
 			SwingUtilities.invokeLater(new Runnable() {
 				@Override

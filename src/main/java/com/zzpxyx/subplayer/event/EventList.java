@@ -2,9 +2,10 @@ package com.zzpxyx.subplayer.event;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.ListIterator;
 
-public class EventList implements ListIterator<Event> {
+public class EventList implements ListIterator<Event>, Iterable<Event> {
 	private ArrayList<Event> list = new ArrayList<>();
 	private int nextIndex = 0;
 
@@ -53,8 +54,9 @@ public class EventList implements ListIterator<Event> {
 		throw new UnsupportedOperationException();
 	}
 
-	public void sort() {
-		Collections.sort(list);
+	@Override
+	public Iterator<Event> iterator() {
+		return this;
 	}
 
 	public Event peekNext() {
@@ -63,5 +65,13 @@ public class EventList implements ListIterator<Event> {
 
 	public Event peekPrevious() {
 		return list.get(nextIndex - 1);
+	}
+
+	public void prepare() {
+		Collections.sort(list);
+		list.get(0).elapsedSubtitleTime = list.get(0).time;
+		for (int i = 1; i < list.size(); i++) {
+			list.get(i).elapsedSubtitleTime = list.get(i).time - list.get(i - 1).time;
+		}
 	}
 }

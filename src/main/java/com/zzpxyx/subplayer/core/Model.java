@@ -5,16 +5,19 @@ import java.util.Observable;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import com.zzpxyx.subplayer.event.Event;
+import com.zzpxyx.subplayer.event.EventList;
+
 public class Model extends Observable {
-	private SubtitleList subtitleList;
-	private long previousStartEventSystemTimestamp; // Auxiliary timestamp for time axis stabilization.
+	private EventList eventList;
+	private long previousEventSystemTimestamp; // Auxiliary timestamp for time axis stabilization.
 	private long startTimeMarker = 0; // Start playing from here. The marker for the "playing cursor".
-	private Timer scheduler = new Timer();
-	private LinkedList<Subtitle> visibleSubtitleList = new LinkedList<>();
+	private Timer scheduler;
+	private LinkedList<String> visibleSubtitleList = new LinkedList<>();
 	private boolean isPlaying = false;
 
-	public Model(SubtitleList list) {
-		subtitleList = list;
+	public Model(EventList list) {
+		eventList = list;
 	}
 
 	public void PlayOrPause() {
@@ -28,21 +31,16 @@ public class Model extends Observable {
 	}
 
 	public void Play() {
-		if (!isPlaying) {
+		if (!isPlaying && eventList.hasNext()) {
 			// Treat as if resuming. A new play equals to resuming from time marker 0.
-			long lastSubtitleStartTime = subtitleList.hasPrevious() ? subtitleList.peekPrevious().startTime : 0;
-			previousStartEventSystemTimestamp = System.currentTimeMillis() - (startTimeMarker - lastSubtitleStartTime);
+			Event previousEvent = eventList.hasPrevious() ? eventList.peekPrevious() : new Event(Event.Type.End, 0, "");
+			Event nextEvent = eventList.peekNext();
+			previousEventSystemTimestamp = System.currentTimeMillis() - (startTimeMarker - previousEvent.time);
+
+			// Schedule next event.
 			scheduler = new Timer();
-
-			// Schedule the end events for the currently visible subtitles.
-			visibleSubtitleList.forEach(s -> scheduler.schedule(new EndEventHandler(s), s.endTime - startTimeMarker));
-
-			// Schedule the next start event.
-			if (subtitleList.hasNext()) {
-				Subtitle nextSubtitle = subtitleList.peekNext();
-				long nextStartEventDelay = nextSubtitle.startTime - startTimeMarker;
-				scheduler.schedule(new StartEventHandler(), nextStartEventDelay);
-			}
+			long nextEventDelay = nextEvent.time - startTimeMarker;
+			scheduler.schedule(new EventHandler(), nextEventDelay);
 
 			isPlaying = true;
 		}
@@ -54,27 +52,27 @@ public class Model extends Observable {
 			scheduler.cancel();
 
 			// Save current state.
-			long lastSubtitleStartTime = subtitleList.hasPrevious() ? subtitleList.peekPrevious().startTime : 0;
-			startTimeMarker = System.currentTimeMillis() - previousStartEventSystemTimestamp + lastSubtitleStartTime;
+			Event previousEvent = eventList.hasPrevious() ? eventList.peekPrevious() : new Event(Event.Type.End, 0, "");
+			startTimeMarker = System.currentTimeMillis() - previousEventSystemTimestamp + previousEvent.time;
 
 			isPlaying = false;
 		}
 	}
 
 	public void Next() {
-		if (subtitleList.hasNext()) {
+		if (eventList.hasNext()) {
 			boolean wasPlaying = isPlaying;
 
 			// Pause the play.
 			Pause();
 
 			// Adjust start point.
-			Subtitle nextSubtitle = subtitleList.next();
-			startTimeMarker = nextSubtitle.startTime;
+			Event nextEvent = eventList.next();
+			startTimeMarker = nextEvent.time;
 
 			// Display next subtitle.
 			visibleSubtitleList.clear();
-			visibleSubtitleList.add(nextSubtitle);
+			visibleSubtitleList.add(nextEvent.text);
 			setChanged();
 			notifyObservers(visibleSubtitleList);
 
@@ -86,66 +84,38 @@ public class Model extends Observable {
 	}
 
 	/**
-	 * Handler for the start event.
-	 * 
-	 * The start event is fired when a subtitle becomes visible.
+	 * Handler for events.
 	 */
-	private class StartEventHandler extends TimerTask {
+	private class EventHandler extends TimerTask {
 		@Override
 		public void run() {
-			// At this point, the previous subtitle is still displaying or has been erased.
+			// Get a snapshot of current state.
+			Event previousEvent = eventList.hasPrevious() ? eventList.peekPrevious() : new Event(Event.Type.End, 0, "");
+			Event currentEvent = eventList.next(); // Note that the cursor in the list moves to next.
 
-			if (subtitleList.hasNext()) {
-				// Get a snapshot of current state.
-				long lastSubtitleStartTime = subtitleList.hasPrevious() ? subtitleList.peekPrevious().startTime : 0;
-				long currentStartEventSystemTimestamp = System.currentTimeMillis();
-				Subtitle currentSubtitle = subtitleList.next(); // "Current" is actually "previous" now.
+			// Calculate offset.
+			long currentEventSystemTimestamp = System.currentTimeMillis();
+			long elapsedTimeRealWorld = currentEventSystemTimestamp - previousEventSystemTimestamp;
+			long elapsedTimeSubtitle = currentEvent.time - previousEvent.time;
+			long offset = elapsedTimeRealWorld - elapsedTimeSubtitle;
 
-				// Calculate duration and offset.
-				long duration = currentSubtitle.endTime - currentSubtitle.startTime;
-				long elapsedTimeRealWorld = currentStartEventSystemTimestamp - previousStartEventSystemTimestamp;
-				long elapsedTimeSubtitle = currentSubtitle.startTime - lastSubtitleStartTime;
-				long offset = elapsedTimeRealWorld - elapsedTimeSubtitle;
-
-				// Schedule the end event.
-				scheduler.schedule(new EndEventHandler(currentSubtitle), duration);
-
-				// Schedule the next start event.
-				if (subtitleList.hasNext()) {
-					Subtitle nextSubtitle = subtitleList.peekNext();
-					long nextStartEventDelay = Math.max(nextSubtitle.startTime - currentSubtitle.startTime + offset, 0);
-					scheduler.schedule(new StartEventHandler(), nextStartEventDelay);
-					previousStartEventSystemTimestamp = currentStartEventSystemTimestamp;
-				}
-
-				// Display current subtitle.
-				visibleSubtitleList.add(currentSubtitle);
-				setChanged();
-				notifyObservers(visibleSubtitleList);
+			// Schedule next event.
+			if (eventList.hasNext()) {
+				Event nextEvent = eventList.peekNext();
+				long nextEventDelay = Math.max(nextEvent.time - currentEvent.time + offset, 0);
+				scheduler.schedule(new EventHandler(), nextEventDelay);
+				previousEventSystemTimestamp = currentEventSystemTimestamp;
 			}
 
-		}
-	}
-
-	/**
-	 * Handler for the end event.
-	 * 
-	 * The end event is fired when a subtitle becomes invisible.
-	 */
-	private class EndEventHandler extends TimerTask {
-		private Subtitle subtitleToErase;
-
-		public EndEventHandler(Subtitle subtitleToErase) {
-			super();
-			this.subtitleToErase = subtitleToErase;
-		}
-
-		@Override
-		public void run() {
-			// At this point, there may be more than one subtitle displaying.
-
-			// Erase the given subtitle.
-			visibleSubtitleList.remove(subtitleToErase);
+			// Update displaying subtitles.
+			switch (currentEvent.type) {
+			case Start:
+				visibleSubtitleList.add(currentEvent.text);
+				break;
+			case End:
+				visibleSubtitleList.remove(currentEvent.text);
+				break;
+			}
 			setChanged();
 			notifyObservers(visibleSubtitleList);
 		}

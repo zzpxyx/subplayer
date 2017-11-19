@@ -15,7 +15,7 @@ public class SrtParser {
 		SectionBegin, Time, Text, SectionEnd
 	}
 
-	public EventList getEventList(String fileName) {
+	public static EventList getEventList(String fileName) {
 		EventList list = new EventList();
 		try (BufferedReader reader = Files.newBufferedReader(Paths.get(fileName))) {
 			String line;
@@ -72,7 +72,7 @@ public class SrtParser {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		list.sort();
+		list.prepare();
 		return list;
 	}
 }
