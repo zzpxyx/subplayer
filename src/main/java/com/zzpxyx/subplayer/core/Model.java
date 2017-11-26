@@ -40,6 +40,7 @@ public class Model extends Observable {
 			// Schedule next event.
 			scheduler = new Timer();
 			long nextEventDelay = nextEvent.time - startTimeMarker;
+			System.out.println(eventList.nextIndex() + " " + nextEvent.time + " " + startTimeMarker);
 			scheduler.schedule(new EventHandler(), nextEventDelay);
 
 			isPlaying = true;
@@ -61,25 +62,44 @@ public class Model extends Observable {
 
 	public void Next() {
 		if (eventList.hasNext()) {
-			boolean wasPlaying = isPlaying;
-
-			// Pause the play.
-			Pause();
-
-			// Adjust start point.
 			Event nextEvent = eventList.next();
-			startTimeMarker = nextEvent.time;
+			JumpToEvent(nextEvent);
+		}
+	}
 
-			// Display next subtitle.
-			visibleSubtitleList.clear();
-			visibleSubtitleList.add(nextEvent.text);
-			setChanged();
-			notifyObservers(visibleSubtitleList);
+	public void Previous() {
+		if (eventList.hasPrevious()) {
+			Event previousEvent = eventList.previous();
+			JumpToEvent(previousEvent);
+		}
+	}
 
-			// Resume playing if necessary.
-			if (wasPlaying) {
-				Play();
+	private void JumpToEvent(Event targetEvent) {
+		boolean wasPlaying = isPlaying;
+
+		// Pause the play.
+		Pause();
+
+		// Adjust start point.
+		startTimeMarker = targetEvent.time;
+
+		// Update displaying subtitles.
+		switch (targetEvent.type) {
+		case Start:
+			if (!visibleSubtitleList.contains(targetEvent.text)) {
+				visibleSubtitleList.add(targetEvent.text);
 			}
+			break;
+		case End:
+			visibleSubtitleList.remove(targetEvent.text);
+			break;
+		}
+		setChanged();
+		notifyObservers(visibleSubtitleList);
+
+		// Resume playing if necessary.
+		if (wasPlaying) {
+			Play();
 		}
 	}
 

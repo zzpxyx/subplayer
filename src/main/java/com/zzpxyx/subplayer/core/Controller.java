@@ -17,4 +17,8 @@ public class Controller {
 	public void Next() {
 		model.Next();
 	}
+
+	public void Previous() {
+		model.Previous();
+	}
 }

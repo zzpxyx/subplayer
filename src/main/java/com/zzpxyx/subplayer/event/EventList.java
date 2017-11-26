@@ -31,7 +31,7 @@ public class EventList implements ListIterator<Event>, Iterable<Event> {
 
 	@Override
 	public Event previous() {
-		return list.get(nextIndex--);
+		return list.get(--nextIndex);
 	}
 
 	@Override

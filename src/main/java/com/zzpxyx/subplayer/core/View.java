@@ -68,6 +68,15 @@ public class View implements Observer {
 				controller.Next();
 			}
 		});
+		panel.getInputMap().put(KeyStroke.getKeyStroke("UP"), "Previous");
+		panel.getActionMap().put("Previous", new AbstractAction() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				controller.Previous();
+			}
+		});
 	}
 
 	@Override
