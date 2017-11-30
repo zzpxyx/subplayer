@@ -61,15 +61,35 @@ public class Model extends Observable {
 	}
 
 	public void next() {
-		if (currentEventIndex < eventList.size() - 1) {
-			jumpToEvent(currentEventIndex + 1);
+		int newStartEventIndex = currentEventIndex;
+
+		while (newStartEventIndex < eventList.size() - 1) {
+			newStartEventIndex++;
+			if (eventList.get(newStartEventIndex).type == Event.Type.Start) {
+				break;
+			}
 		}
+		jumpToEvent(newStartEventIndex); // Now either a start event is found, or jump to the end of the event list.
 	}
 
 	public void previous() {
-		if (currentEventIndex > 0) {
-			jumpToEvent(currentEventIndex - 1);
+		int newStartEventIndex = currentEventIndex;
+
+		while (newStartEventIndex > 0) {
+			newStartEventIndex--;
+			if (eventList.get(newStartEventIndex).type == Event.Type.Start) {
+				break;
+			}
 		}
+		jumpToEvent(newStartEventIndex); // Now either a start event is found, or jump to the start of the event list.
+	}
+
+	public void forward() {
+		offset -= 50;
+	}
+
+	public void backward() {
+		offset += 50;
 	}
 
 	private void jumpToEvent(int newEventIndex) {
@@ -84,16 +104,10 @@ public class Model extends Observable {
 
 		// Update displaying subtitles.
 		Event currentEvent = eventList.get(currentEventIndex);
-		switch (currentEvent.type) {
-		case Dummy:
-			visibleSubtitleList.clear();
-			break;
-		case Start:
+		visibleSubtitleList.clear();
+		if (currentEvent.type == Event.Type.Start) {
+			// Only show subtitle if jumping to a start event.
 			visibleSubtitleList.add(currentEvent.text);
-			break;
-		case End:
-			visibleSubtitleList.remove(currentEvent.text);
-			break;
 		}
 		setChanged();
 		notifyObservers(visibleSubtitleList);
@@ -136,7 +150,6 @@ public class Model extends Observable {
 			// Update displaying subtitles.
 			switch (currentEvent.type) {
 			case Dummy:
-				visibleSubtitleList.clear();
 				break;
 			case Start:
 				visibleSubtitleList.add(currentEvent.text);

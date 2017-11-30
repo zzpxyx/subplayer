@@ -77,6 +77,24 @@ public class View implements Observer {
 				controller.Previous();
 			}
 		});
+		panel.getInputMap().put(KeyStroke.getKeyStroke("RIGHT"), "Forward");
+		panel.getActionMap().put("Forward", new AbstractAction() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				controller.forward();
+			}
+		});
+		panel.getInputMap().put(KeyStroke.getKeyStroke("LEFT"), "Backward");
+		panel.getActionMap().put("Backward", new AbstractAction() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				controller.backward();
+			}
+		});
 	}
 
 	@Override

@@ -21,4 +21,12 @@ public class Controller {
 	public void Previous() {
 		model.previous();
 	}
+
+	public void forward() {
+		model.forward();
+	}
+
+	public void backward() {
+		model.backward();
+	}
 }
