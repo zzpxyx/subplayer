@@ -56,7 +56,7 @@ public class View implements Observer {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				controller.PlayOrPause();
+				controller.playOrPause();
 			}
 		});
 		panel.getInputMap().put(KeyStroke.getKeyStroke("DOWN"), "Next");
@@ -65,7 +65,7 @@ public class View implements Observer {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				controller.Next();
+				controller.next();
 			}
 		});
 		panel.getInputMap().put(KeyStroke.getKeyStroke("UP"), "Previous");
@@ -74,7 +74,7 @@ public class View implements Observer {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				controller.Previous();
+				controller.previous();
 			}
 		});
 		panel.getInputMap().put(KeyStroke.getKeyStroke("RIGHT"), "Forward");

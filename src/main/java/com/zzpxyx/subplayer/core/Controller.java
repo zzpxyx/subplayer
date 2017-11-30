@@ -10,15 +10,15 @@ public class Controller {
 		this.model.addObserver(this.view);
 	}
 
-	public void PlayOrPause() {
+	public void playOrPause() {
 		model.playOrPause();
 	}
 
-	public void Next() {
+	public void next() {
 		model.next();
 	}
 
-	public void Previous() {
+	public void previous() {
 		model.previous();
 	}
 
