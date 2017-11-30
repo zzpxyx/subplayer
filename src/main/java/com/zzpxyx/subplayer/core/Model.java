@@ -1,97 +1,98 @@
 package com.zzpxyx.subplayer.core;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Observable;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import com.zzpxyx.subplayer.event.Event;
-import com.zzpxyx.subplayer.event.EventList;
 
 public class Model extends Observable {
-	private EventList eventList;
-	private long previousEventSystemTimestamp; // Auxiliary timestamp for time axis stabilization.
-	private long startTimeMarker = 0; // Start playing from here. The marker for the "playing cursor".
+	private ArrayList<Event> eventList; // List has a dummy head.
 	private Timer scheduler;
 	private LinkedList<String> visibleSubtitleList = new LinkedList<>();
 	private boolean isPlaying = false;
+	private int currentEventIndex = 0;
+	private long currentEventElapsedTime = 0;
+	private long currentEventSystemTimestamp; // Auxiliary timestamp for time axis stabilization.
+	private long offset = 0;
 
-	public Model(EventList list) {
+	public Model(ArrayList<Event> list) {
 		eventList = list;
 	}
 
-	public void PlayOrPause() {
+	public void playOrPause() {
 		if (isPlaying) {
 			// We want to pause now.
-			Pause();
+			pause();
 		} else {
 			// We want to play now.
-			Play();
+			play();
 		}
 	}
 
-	public void Play() {
-		if (!isPlaying && eventList.hasNext()) {
-			// Treat as if resuming. A new play equals to resuming from time marker 0.
-			Event previousEvent = eventList.hasPrevious() ? eventList.peekPrevious() : new Event(Event.Type.End, 0, "");
-			Event nextEvent = eventList.peekNext();
-			previousEventSystemTimestamp = System.currentTimeMillis() - (startTimeMarker - previousEvent.time);
+	public void play() {
+		if (!isPlaying && currentEventIndex < eventList.size() - 1) {
+			// Treat as if resuming. A new play equals to resuming from the start.
+
+			// Save current state.
+			currentEventSystemTimestamp = System.currentTimeMillis() - currentEventElapsedTime;
 
 			// Schedule next event.
 			scheduler = new Timer();
-			long nextEventDelay = nextEvent.time - startTimeMarker;
-			System.out.println(eventList.nextIndex() + " " + nextEvent.time + " " + startTimeMarker);
-			scheduler.schedule(new EventHandler(), nextEventDelay);
+			scheduler.schedule(new EventHandler(), Math.max(nextEventDelay() + offset - currentEventElapsedTime, 0));
 
 			isPlaying = true;
 		}
+
 	}
 
-	public void Pause() {
+	public void pause() {
 		if (isPlaying) {
 			// Cancel all scheduled events.
 			scheduler.cancel();
 
 			// Save current state.
-			Event previousEvent = eventList.hasPrevious() ? eventList.peekPrevious() : new Event(Event.Type.End, 0, "");
-			startTimeMarker = System.currentTimeMillis() - previousEventSystemTimestamp + previousEvent.time;
+			currentEventElapsedTime = System.currentTimeMillis() - currentEventSystemTimestamp;
 
 			isPlaying = false;
 		}
 	}
 
-	public void Next() {
-		if (eventList.hasNext()) {
-			Event nextEvent = eventList.next();
-			JumpToEvent(nextEvent);
+	public void next() {
+		if (currentEventIndex < eventList.size() - 1) {
+			jumpToEvent(currentEventIndex + 1);
 		}
 	}
 
-	public void Previous() {
-		if (eventList.hasPrevious()) {
-			Event previousEvent = eventList.previous();
-			JumpToEvent(previousEvent);
+	public void previous() {
+		if (currentEventIndex > 0) {
+			jumpToEvent(currentEventIndex - 1);
 		}
 	}
 
-	private void JumpToEvent(Event targetEvent) {
+	private void jumpToEvent(int newEventIndex) {
 		boolean wasPlaying = isPlaying;
 
 		// Pause the play.
-		Pause();
+		pause();
 
 		// Adjust start point.
-		startTimeMarker = targetEvent.time;
+		currentEventIndex = newEventIndex;
+		currentEventElapsedTime = 0;
 
 		// Update displaying subtitles.
-		switch (targetEvent.type) {
+		Event currentEvent = eventList.get(currentEventIndex);
+		switch (currentEvent.type) {
+		case Dummy:
+			visibleSubtitleList.clear();
+			break;
 		case Start:
-			if (!visibleSubtitleList.contains(targetEvent.text)) {
-				visibleSubtitleList.add(targetEvent.text);
-			}
+			visibleSubtitleList.add(currentEvent.text);
 			break;
 		case End:
-			visibleSubtitleList.remove(targetEvent.text);
+			visibleSubtitleList.remove(currentEvent.text);
 			break;
 		}
 		setChanged();
@@ -99,8 +100,12 @@ public class Model extends Observable {
 
 		// Resume playing if necessary.
 		if (wasPlaying) {
-			Play();
+			play();
 		}
+	}
+
+	private long nextEventDelay() {
+		return eventList.get(currentEventIndex + 1).time - eventList.get(currentEventIndex).time;
 	}
 
 	/**
@@ -109,26 +114,30 @@ public class Model extends Observable {
 	private class EventHandler extends TimerTask {
 		@Override
 		public void run() {
-			// Get a snapshot of current state.
-			Event previousEvent = eventList.hasPrevious() ? eventList.peekPrevious() : new Event(Event.Type.End, 0, "");
-			Event currentEvent = eventList.next(); // Note that the cursor in the list moves to next.
+			// Save states for "current" event. All "current" event will become "previous".
+			Event previousEvent = eventList.get(currentEventIndex);
+			long previousEventSystemTimestamp = currentEventSystemTimestamp;
+
+			// Move to the next event.
+			currentEventIndex++;
+			Event currentEvent = eventList.get(currentEventIndex);
+			currentEventSystemTimestamp = System.currentTimeMillis();
 
 			// Calculate offset.
-			long currentEventSystemTimestamp = System.currentTimeMillis();
 			long elapsedTimeRealWorld = currentEventSystemTimestamp - previousEventSystemTimestamp;
-			long elapsedTimeSubtitle = currentEvent.time - previousEvent.time;
-			long offset = elapsedTimeRealWorld - elapsedTimeSubtitle;
+			long elapsedTimeScheduled = currentEvent.time - previousEvent.time + offset;
+			offset = elapsedTimeRealWorld - elapsedTimeScheduled;
 
 			// Schedule next event.
-			if (eventList.hasNext()) {
-				Event nextEvent = eventList.peekNext();
-				long nextEventDelay = Math.max(nextEvent.time - currentEvent.time + offset, 0);
-				scheduler.schedule(new EventHandler(), nextEventDelay);
-				previousEventSystemTimestamp = currentEventSystemTimestamp;
+			if (currentEventIndex < eventList.size() - 1) {
+				scheduler.schedule(new EventHandler(), Math.max(nextEventDelay() + offset, 0));
 			}
 
 			// Update displaying subtitles.
 			switch (currentEvent.type) {
+			case Dummy:
+				visibleSubtitleList.clear();
+				break;
 			case Start:
 				visibleSubtitleList.add(currentEvent.text);
 				break;

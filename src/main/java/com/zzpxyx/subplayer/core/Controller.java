@@ -11,14 +11,14 @@ public class Controller {
 	}
 
 	public void PlayOrPause() {
-		model.PlayOrPause();
+		model.playOrPause();
 	}
 
 	public void Next() {
-		model.Next();
+		model.next();
 	}
 
 	public void Previous() {
-		model.Previous();
+		model.previous();
 	}
 }

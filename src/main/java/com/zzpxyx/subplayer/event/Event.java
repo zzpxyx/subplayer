@@ -2,13 +2,12 @@ package com.zzpxyx.subplayer.event;
 
 public class Event implements Comparable<Event> {
 	public enum Type {
-		Start, End
+		Dummy, Start, End
 	}
 
 	public Type type;
 	public long time;
 	public String text;
-	public long elapsedSubtitleTime; // Elapsed subtitle time since previous event. Not real world time.
 
 	public Event() {
 	}
@@ -22,5 +21,10 @@ public class Event implements Comparable<Event> {
 	@Override
 	public int compareTo(Event anotherEvent) {
 		return Long.compare(this.time, anotherEvent.time);
+	}
+
+	@Override
+	public String toString() {
+		return time + " " + type + " " + text;
 	}
 }
