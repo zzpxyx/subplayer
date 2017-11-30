@@ -124,9 +124,9 @@ public class Model extends Observable {
 			currentEventSystemTimestamp = System.currentTimeMillis();
 
 			// Calculate offset.
-			long elapsedTimeRealWorld = currentEventSystemTimestamp - previousEventSystemTimestamp;
 			long elapsedTimeScheduled = currentEvent.time - previousEvent.time + offset;
-			offset = elapsedTimeRealWorld - elapsedTimeScheduled;
+			long elapsedTimeRealWorld = currentEventSystemTimestamp - previousEventSystemTimestamp;
+			offset = elapsedTimeScheduled - elapsedTimeRealWorld;
 
 			// Schedule next event.
 			if (currentEventIndex < eventList.size() - 1) {
