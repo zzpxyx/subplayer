@@ -22,7 +22,7 @@ public class Model extends Observable {
 		eventList = list;
 	}
 
-	public void playOrPause() {
+	public synchronized void playOrPause() {
 		if (isPlaying) {
 			// We want to pause now.
 			pause();
@@ -32,7 +32,7 @@ public class Model extends Observable {
 		}
 	}
 
-	public void play() {
+	public synchronized void play() {
 		if (!isPlaying && currentEventIndex < eventList.size() - 1) {
 			// Treat as if resuming. A new play equals to resuming from the start.
 
@@ -48,7 +48,7 @@ public class Model extends Observable {
 
 	}
 
-	public void pause() {
+	public synchronized void pause() {
 		if (isPlaying) {
 			// Cancel all scheduled events.
 			scheduler.cancel();
@@ -60,7 +60,7 @@ public class Model extends Observable {
 		}
 	}
 
-	public void next() {
+	public synchronized void next() {
 		int newStartEventIndex = currentEventIndex;
 
 		while (newStartEventIndex < eventList.size() - 1) {
@@ -72,7 +72,7 @@ public class Model extends Observable {
 		jumpToEvent(newStartEventIndex); // Now either a start event is found, or jump to the end of the event list.
 	}
 
-	public void previous() {
+	public synchronized void previous() {
 		int newStartEventIndex = currentEventIndex;
 
 		while (newStartEventIndex > 0) {
@@ -84,15 +84,15 @@ public class Model extends Observable {
 		jumpToEvent(newStartEventIndex); // Now either a start event is found, or jump to the start of the event list.
 	}
 
-	public void forward() {
+	public synchronized void forward() {
 		offset -= 50;
 	}
 
-	public void backward() {
+	public synchronized void backward() {
 		offset += 50;
 	}
 
-	private void jumpToEvent(int newEventIndex) {
+	private synchronized void jumpToEvent(int newEventIndex) {
 		boolean wasPlaying = isPlaying;
 
 		// Pause the play.
@@ -118,7 +118,7 @@ public class Model extends Observable {
 		}
 	}
 
-	private long nextEventDelay() {
+	private synchronized long nextEventDelay() {
 		return eventList.get(currentEventIndex + 1).time - eventList.get(currentEventIndex).time;
 	}
 
@@ -128,38 +128,40 @@ public class Model extends Observable {
 	private class EventHandler extends TimerTask {
 		@Override
 		public void run() {
-			// Save states for "current" event. All "current" event will become "previous".
-			Event previousEvent = eventList.get(currentEventIndex);
-			long previousEventSystemTimestamp = currentEventSystemTimestamp;
+			synchronized (Model.this) {
+				// Save states for "current" event. All "current" event will become "previous".
+				Event previousEvent = eventList.get(currentEventIndex);
+				long previousEventSystemTimestamp = currentEventSystemTimestamp;
 
-			// Move to the next event.
-			currentEventIndex++;
-			Event currentEvent = eventList.get(currentEventIndex);
-			currentEventSystemTimestamp = System.currentTimeMillis();
+				// Move to the next event.
+				currentEventIndex++;
+				Event currentEvent = eventList.get(currentEventIndex);
+				currentEventSystemTimestamp = System.currentTimeMillis();
 
-			// Calculate offset.
-			long elapsedTimeScheduled = currentEvent.time - previousEvent.time + offset;
-			long elapsedTimeRealWorld = currentEventSystemTimestamp - previousEventSystemTimestamp;
-			offset = elapsedTimeScheduled - elapsedTimeRealWorld;
+				// Calculate offset.
+				long elapsedTimeScheduled = currentEvent.time - previousEvent.time + offset;
+				long elapsedTimeRealWorld = currentEventSystemTimestamp - previousEventSystemTimestamp;
+				offset = elapsedTimeScheduled - elapsedTimeRealWorld;
 
-			// Schedule next event.
-			if (currentEventIndex < eventList.size() - 1) {
-				scheduler.schedule(new EventHandler(), Math.max(nextEventDelay() + offset, 0));
+				// Schedule next event.
+				if (currentEventIndex < eventList.size() - 1) {
+					scheduler.schedule(new EventHandler(), Math.max(nextEventDelay() + offset, 0));
+				}
+
+				// Update displaying subtitles.
+				switch (currentEvent.type) {
+				case Dummy:
+					break;
+				case Start:
+					visibleSubtitleList.add(currentEvent.text);
+					break;
+				case End:
+					visibleSubtitleList.remove(currentEvent.text);
+					break;
+				}
+				setChanged();
+				notifyObservers(visibleSubtitleList);
 			}
-
-			// Update displaying subtitles.
-			switch (currentEvent.type) {
-			case Dummy:
-				break;
-			case Start:
-				visibleSubtitleList.add(currentEvent.text);
-				break;
-			case End:
-				visibleSubtitleList.remove(currentEvent.text);
-				break;
-			}
-			setChanged();
-			notifyObservers(visibleSubtitleList);
 		}
 	}
 }
