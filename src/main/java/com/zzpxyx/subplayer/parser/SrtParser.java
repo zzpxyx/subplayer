@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import com.zzpxyx.subplayer.event.Event;
 
@@ -16,7 +17,7 @@ public class SrtParser {
 		SectionBegin, Time, Text, SectionEnd
 	}
 
-	public static ArrayList<Event> getEventList(String fileName) {
+	public static List<Event> getEventList(String fileName) {
 		ArrayList<Event> list = new ArrayList<>();
 		list.add(new Event(Event.Type.Dummy, 0, "")); // Add a dummy head.
 		try (BufferedReader reader = Files.newBufferedReader(Paths.get(fileName))) {

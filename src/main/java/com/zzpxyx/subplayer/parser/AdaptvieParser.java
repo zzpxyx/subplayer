@@ -1,11 +1,11 @@
 package com.zzpxyx.subplayer.parser;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import com.zzpxyx.subplayer.event.Event;
 
 public class AdaptvieParser {
-	public static ArrayList<Event> getEventList(String fileName) {
+	public static List<Event> getEventList(String fileName) {
 		String fileExtName = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
 		switch (fileExtName) {
 		case "srt":
