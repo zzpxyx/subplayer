@@ -1,7 +1,7 @@
 package com.zzpxyx.subplayer.core;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Observable;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -9,16 +9,16 @@ import java.util.TimerTask;
 import com.zzpxyx.subplayer.event.Event;
 
 public class Model extends Observable {
-	private ArrayList<Event> eventList; // List has a dummy head.
-	private Timer scheduler;
-	private LinkedList<String> visibleSubtitleList = new LinkedList<>();
+	private List<Event> eventList; // List has a dummy head.
+	private List<String> visibleSubtitleList = new LinkedList<>();
+	private Timer scheduler = new Timer();
 	private boolean isPlaying = false;
 	private int currentEventIndex = 0;
 	private long currentEventElapsedTime = 0;
 	private long currentEventSystemTimestamp; // Auxiliary timestamp for time axis stabilization.
 	private long offset = 0;
 
-	public Model(ArrayList<Event> list) {
+	public Model(List<Event> list) {
 		eventList = list;
 	}
 
@@ -90,6 +90,17 @@ public class Model extends Observable {
 
 	public synchronized void backward() {
 		offset += 50;
+	}
+
+	public synchronized void stop() {
+		scheduler.cancel();
+		isPlaying = false;
+		currentEventIndex = 0;
+		currentEventElapsedTime = 0;
+		offset = 0;
+		visibleSubtitleList.clear();
+		setChanged();
+		notifyObservers(visibleSubtitleList);
 	}
 
 	private synchronized void jumpToEvent(int newEventIndex) {

@@ -29,4 +29,8 @@ public class Controller {
 	public void backward() {
 		model.backward();
 	}
+
+	public void stop() {
+		model.stop();
+	}
 }
