@@ -1,12 +1,14 @@
 package com.zzpxyx.subplayer.core;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
+import java.time.Duration;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
@@ -21,43 +23,68 @@ import com.zzpxyx.subplayer.parser.SrtParser;
 
 class ModelTest implements Observer {
 	private static final String RESOURCE_PATH = "src/test/resources/";
-	private static final long ERROR_RANGE = 5;
+	private static final long EVENT_TIME_ERROR_RANGE = 5;
+	private static final long TIMEOUT_MARGIN = 100;
 
+	private List<Event> eventList;
+	private List<Event> expectedList;
+	private List<Event> actualList;
 	private CountDownLatch latch;
-	private ArrayList<Event> actualList = new ArrayList<>();
+	private Model model;
 	private long startTimestamp;
+	private long timeout;
 
 	@Test
 	void testPlayPauseStop() {
-		List<Event> eventList = SrtParser.getEventList(RESOURCE_PATH + "PlayPauseStop.srt");
-		List<Event> expectedList = parseOutputFile(RESOURCE_PATH + "PlayPauseStop.out");
-		actualList.clear();
-		latch = new CountDownLatch(7);
-		Model model = new Model(eventList);
-		model.addObserver(this);
-		startTimestamp = System.currentTimeMillis();
-		try {
-			model.play();
-			Thread.sleep(50);
-			model.play();
-			Thread.sleep(100);
-			model.pause();
-			Thread.sleep(100);
-			model.pause();
-			Thread.sleep(100);
-			model.playOrPause();
-			Thread.sleep(100);
-			model.stop();
-			Thread.sleep(50);
-			model.playOrPause();
-			Thread.sleep(50);
-			model.playOrPause();
-			Thread.sleep(50);
-			model.playOrPause();
-			latch.await();
-		} catch (InterruptedException e) {
-			// Test outcome is back or test went wrong. No need to do anything here.
-		}
+		init("PlayPauseStop.srt", "PlayPauseStop.out");
+		assertTimeoutPreemptively(Duration.ofMillis(timeout), () -> {
+			startTimestamp = System.currentTimeMillis();
+			try {
+				model.play();
+				Thread.sleep(50);
+				model.play();
+				Thread.sleep(100);
+				model.pause();
+				Thread.sleep(100);
+				model.pause();
+				Thread.sleep(100);
+				model.playOrPause();
+				Thread.sleep(100);
+				model.stop();
+				Thread.sleep(50);
+				model.playOrPause();
+				Thread.sleep(50);
+				model.playOrPause();
+				Thread.sleep(50);
+				model.playOrPause();
+				latch.await();
+			} catch (InterruptedException e) {
+				// Test outcome is back or test went wrong. No need to do anything here.
+			}
+		});
+		assertTrue(compareEventList(expectedList, actualList));
+	}
+
+	@Test
+	void testPlayNextPrevious() {
+		init("PlayPauseStop.srt", "PlayNextPrevious.out");
+		assertTimeoutPreemptively(Duration.ofMillis(timeout), () -> {
+			startTimestamp = System.currentTimeMillis();
+			try {
+				model.next();
+				Thread.sleep(50);
+				model.previous();
+				Thread.sleep(50);
+				model.play();
+				Thread.sleep(50);
+				model.next();
+				Thread.sleep(150);
+				model.previous();
+				latch.await();
+			} catch (InterruptedException e) {
+				// Test outcome is back or test went wrong. No need to do anything here.
+			}
+		});
 		assertTrue(compareEventList(expectedList, actualList));
 	}
 
@@ -72,8 +99,18 @@ class ModelTest implements Observer {
 		}
 	}
 
+	private void init(String dataFileName, String outputFileName) {
+		eventList = SrtParser.getEventList(RESOURCE_PATH + dataFileName);
+		expectedList = parseOutputFile(RESOURCE_PATH + outputFileName);
+		actualList = new LinkedList<>();
+		latch = new CountDownLatch(expectedList.size());
+		model = new Model(eventList);
+		model.addObserver(this);
+		timeout = expectedList.get(expectedList.size() - 1).time + TIMEOUT_MARGIN;
+	}
+
 	private List<Event> parseOutputFile(String fileName) {
-		List<Event> textList = new ArrayList<>();
+		List<Event> textList = new LinkedList<>();
 		try (Stream<String> stream = Files.lines(Paths.get(fileName))) {
 			textList = stream.map(s -> parseEvent(s)).collect(Collectors.toList());
 		} catch (IOException e) {
@@ -90,7 +127,7 @@ class ModelTest implements Observer {
 	}
 
 	private boolean compareEventList(List<Event> list1, List<Event> list2) {
-		if (list1.size() != list2.size()) {
+		if (list1 == null || list2 == null || list1.size() != list2.size()) {
 			return false;
 		}
 		Iterator<Event> iterator1 = list1.iterator();
@@ -98,7 +135,7 @@ class ModelTest implements Observer {
 		while (iterator1.hasNext()) {
 			Event event1 = iterator1.next();
 			Event event2 = iterator2.next();
-			if (Math.abs(event1.time - event2.time) > ERROR_RANGE || !event1.text.equals(event2.text)) {
+			if (Math.abs(event1.time - event2.time) > EVENT_TIME_ERROR_RANGE || !event1.text.equals(event2.text)) {
 				return false;
 			}
 		}
