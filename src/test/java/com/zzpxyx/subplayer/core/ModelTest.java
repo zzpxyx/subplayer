@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 
 import com.zzpxyx.subplayer.event.Event;
 import com.zzpxyx.subplayer.parser.SrtParser;
@@ -32,12 +33,10 @@ class ModelTest implements Observer {
 	private CountDownLatch latch;
 	private Model model;
 	private long startTimestamp;
-	private long timeout;
 
 	@Test
 	void testPlayPauseStop() {
-		init("PlayPauseStop.srt", "PlayPauseStop.out");
-		assertTimeoutPreemptively(Duration.ofMillis(timeout), () -> {
+		runTest("PlayPauseStop.srt", "PlayPauseStop.out", () -> {
 			startTimestamp = System.currentTimeMillis();
 			try {
 				model.play();
@@ -62,13 +61,11 @@ class ModelTest implements Observer {
 				// Test outcome is back or test went wrong. No need to do anything here.
 			}
 		});
-		assertTrue(compareEventList(expectedList, actualList));
 	}
 
 	@Test
 	void testPlayNextPrevious() {
-		init("PlayPauseStop.srt", "PlayNextPrevious.out");
-		assertTimeoutPreemptively(Duration.ofMillis(timeout), () -> {
+		runTest("PlayPauseStop.srt", "PlayNextPrevious.out", () -> {
 			startTimestamp = System.currentTimeMillis();
 			try {
 				model.next();
@@ -85,7 +82,6 @@ class ModelTest implements Observer {
 				// Test outcome is back or test went wrong. No need to do anything here.
 			}
 		});
-		assertTrue(compareEventList(expectedList, actualList));
 	}
 
 	@Override
@@ -99,14 +95,16 @@ class ModelTest implements Observer {
 		}
 	}
 
-	private void init(String dataFileName, String outputFileName) {
+	private void runTest(String dataFileName, String outputFileName, Executable test) {
 		eventList = SrtParser.getEventList(RESOURCE_PATH + dataFileName);
 		expectedList = parseOutputFile(RESOURCE_PATH + outputFileName);
 		actualList = new LinkedList<>();
 		latch = new CountDownLatch(expectedList.size());
 		model = new Model(eventList);
 		model.addObserver(this);
-		timeout = expectedList.get(expectedList.size() - 1).time + TIMEOUT_MARGIN;
+		long timeout = expectedList.get(expectedList.size() - 1).time + TIMEOUT_MARGIN;
+		assertTimeoutPreemptively(Duration.ofMillis(timeout), test);
+		assertTrue(compareEventList(expectedList, actualList));
 	}
 
 	private List<Event> parseOutputFile(String fileName) {
