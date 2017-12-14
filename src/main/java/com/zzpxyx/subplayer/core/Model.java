@@ -41,7 +41,7 @@ public class Model extends Observable {
 
 			// Schedule next event.
 			scheduler = new Timer();
-			scheduler.schedule(new EventHandler(), Math.max(nextEventDelay() + offset - currentEventElapsedTime, 0));
+			scheduler.schedule(new EventHandler(), Math.max(getNextEventDelay() + offset - currentEventElapsedTime, 0));
 
 			isPlaying = true;
 		}
@@ -85,22 +85,19 @@ public class Model extends Observable {
 	}
 
 	public synchronized void forward() {
-		offset -= 50;
+		adjustOffset(-50);
 	}
 
 	public synchronized void backward() {
-		offset += 50;
+		adjustOffset(50);
 	}
 
 	public synchronized void stop() {
-		scheduler.cancel();
-		isPlaying = false;
-		currentEventIndex = 0;
-		currentEventElapsedTime = 0;
-		offset = 0;
-		visibleSubtitleList.clear();
-		setChanged();
-		notifyObservers(visibleSubtitleList);
+		// Pause the play.
+		pause();
+
+		// Jump back to the starting point.
+		jumpToEvent(0);
 	}
 
 	private synchronized void jumpToEvent(int newEventIndex) {
@@ -112,6 +109,7 @@ public class Model extends Observable {
 		// Adjust start point.
 		currentEventIndex = newEventIndex;
 		currentEventElapsedTime = 0;
+		offset = 0;
 
 		// Update displaying subtitles.
 		Event currentEvent = eventList.get(currentEventIndex);
@@ -129,7 +127,22 @@ public class Model extends Observable {
 		}
 	}
 
-	private synchronized long nextEventDelay() {
+	private synchronized void adjustOffset(long time) {
+		boolean wasPlaying = isPlaying;
+
+		// Pause the play.
+		pause();
+
+		// Adjust the offset.
+		offset += time;
+
+		// Resume playing if necessary.
+		if (wasPlaying) {
+			play();
+		}
+	}
+
+	private synchronized long getNextEventDelay() {
 		return eventList.get(currentEventIndex + 1).time - eventList.get(currentEventIndex).time;
 	}
 
@@ -156,7 +169,7 @@ public class Model extends Observable {
 
 				// Schedule next event.
 				if (currentEventIndex < eventList.size() - 1) {
-					scheduler.schedule(new EventHandler(), Math.max(nextEventDelay() + offset, 0));
+					scheduler.schedule(new EventHandler(), Math.max(getNextEventDelay() + offset, 0));
 				}
 
 				// Update displaying subtitles.

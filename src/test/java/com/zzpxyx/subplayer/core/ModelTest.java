@@ -36,7 +36,7 @@ class ModelTest implements Observer {
 
 	@Test
 	void testPlayPauseStop() {
-		runTest("PlayPauseStop.srt", "PlayPauseStop.out", () -> {
+		runTest("Test.srt", "PlayPauseStop.out", () -> {
 			startTimestamp = System.currentTimeMillis();
 			try {
 				model.play();
@@ -65,7 +65,7 @@ class ModelTest implements Observer {
 
 	@Test
 	void testPlayNextPrevious() {
-		runTest("PlayPauseStop.srt", "PlayNextPrevious.out", () -> {
+		runTest("Test.srt", "PlayNextPrevious.out", () -> {
 			startTimestamp = System.currentTimeMillis();
 			try {
 				model.next();
@@ -77,6 +77,30 @@ class ModelTest implements Observer {
 				model.next();
 				Thread.sleep(150);
 				model.previous();
+				latch.await();
+			} catch (InterruptedException e) {
+				// Test outcome is back or test went wrong. No need to do anything here.
+			}
+		});
+	}
+
+	@Test
+	void testPlayForwardBackward() {
+		runTest("Test.srt", "PlayForwardBackward.out", () -> {
+			startTimestamp = System.currentTimeMillis();
+			try {
+				model.forward();
+				Thread.sleep(50);
+				model.backward();
+				Thread.sleep(50);
+				model.forward();
+				Thread.sleep(50);
+				model.play();
+				model.forward();
+				model.forward();
+				Thread.sleep(100);
+				model.backward();
+				model.backward();
 				latch.await();
 			} catch (InterruptedException e) {
 				// Test outcome is back or test went wrong. No need to do anything here.
