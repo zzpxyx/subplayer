@@ -1,5 +1,7 @@
 package com.zzpxyx.subplayer.core;
 
+import com.zzpxyx.subplayer.parser.SrtParser;
+
 public class Controller {
 	private Model model;
 	private View view;
@@ -32,5 +34,9 @@ public class Controller {
 
 	public void stop() {
 		model.stop();
+	}
+
+	public void setSubtitleFile(String fileName) {
+		model.setEventList(SrtParser.getEventList(fileName));
 	}
 }

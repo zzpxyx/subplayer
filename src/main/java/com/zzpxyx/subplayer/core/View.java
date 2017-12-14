@@ -9,11 +9,13 @@ import java.util.Observer;
 import java.util.stream.Collectors;
 
 import javax.swing.AbstractAction;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTextPane;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
@@ -22,6 +24,7 @@ public class View implements Observer {
 	private JFrame frame = new JFrame("SubPlayer");
 	private JPanel panel = new JPanel();
 	private JTextPane textPane = new JTextPane();
+	private JFileChooser fileChooser = new JFileChooser();
 	private String text;
 
 	public View() {
@@ -102,6 +105,19 @@ public class View implements Observer {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				controller.stop();
+			}
+		});
+		panel.getInputMap().put(KeyStroke.getKeyStroke("O"), "Open");
+		panel.getActionMap().put("Open", new AbstractAction() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				fileChooser.setFileFilter(new FileNameExtensionFilter("Subtitle files", "srt"));
+				if (fileChooser.showOpenDialog(panel) == JFileChooser.APPROVE_OPTION) {
+					String fileName = fileChooser.getSelectedFile().getAbsolutePath();
+					controller.setSubtitleFile(fileName);
+				}
 			}
 		});
 	}

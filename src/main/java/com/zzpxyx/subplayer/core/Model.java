@@ -9,7 +9,7 @@ import java.util.TimerTask;
 import com.zzpxyx.subplayer.event.Event;
 
 public class Model extends Observable {
-	private List<Event> eventList; // List has a dummy head.
+	private List<Event> eventList = new LinkedList<>(); // List has a dummy head.
 	private List<String> visibleSubtitleList = new LinkedList<>();
 	private Timer scheduler = new Timer();
 	private boolean isPlaying = false;
@@ -18,8 +18,8 @@ public class Model extends Observable {
 	private long currentEventSystemTimestamp; // Auxiliary timestamp for time axis stabilization.
 	private long offset = 0;
 
-	public Model(List<Event> list) {
-		eventList = list;
+	public Model() {
+		eventList.add(new Event(Event.Type.Dummy, 0, ""));
 	}
 
 	public synchronized void playOrPause() {
@@ -98,6 +98,14 @@ public class Model extends Observable {
 
 		// Jump back to the starting point.
 		jumpToEvent(0);
+	}
+
+	public synchronized void setEventList(List<Event> list) {
+		// Stop the play.
+		stop();
+
+		// Change the list.
+		eventList = list;
 	}
 
 	private synchronized void jumpToEvent(int newEventIndex) {

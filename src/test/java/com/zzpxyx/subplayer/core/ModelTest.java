@@ -27,7 +27,6 @@ class ModelTest implements Observer {
 	private static final long EVENT_TIME_ERROR_RANGE = 5;
 	private static final long TIMEOUT_MARGIN = 100;
 
-	private List<Event> eventList;
 	private List<Event> expectedList;
 	private List<Event> actualList;
 	private CountDownLatch latch;
@@ -120,11 +119,12 @@ class ModelTest implements Observer {
 	}
 
 	private void runTest(String dataFileName, String outputFileName, Executable test) {
-		eventList = SrtParser.getEventList(RESOURCE_PATH + dataFileName);
+		List<Event> eventList = SrtParser.getEventList(RESOURCE_PATH + dataFileName);
 		expectedList = parseOutputFile(RESOURCE_PATH + outputFileName);
 		actualList = new LinkedList<>();
 		latch = new CountDownLatch(expectedList.size());
-		model = new Model(eventList);
+		model = new Model();
+		model.setEventList(eventList);
 		model.addObserver(this);
 		long timeout = expectedList.get(expectedList.size() - 1).time + TIMEOUT_MARGIN;
 		assertTimeoutPreemptively(Duration.ofMillis(timeout), test);
