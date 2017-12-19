@@ -7,6 +7,8 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
@@ -37,6 +39,7 @@ public class View implements Observer {
 	private static final String NEXT_EMOJI = String.valueOf(Character.toChars(0x23ED));
 
 	private boolean isPlaying = false;
+	private boolean isButtonVisible = true;
 	private JFrame frame = new JFrame("SubPlayer");
 	private JTextPane textPane = new JTextPane();
 	private JFileChooser fileChooser = new JFileChooser();
@@ -50,10 +53,46 @@ public class View implements Observer {
 	private String text;
 
 	public View() {
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setLocation(300, 700);
-		// frame.setUndecorated(true);
-		// frame.setOpacity(0.25f);
+		textPane.setEditable(false);
+		textPane.setFocusable(false);
+		textPane.setPreferredSize(new Dimension(1000, 100));
+		textPane.setLocation(100, 100);
+		textPane.setLocation(10, 10);
+		textPane.setBackground(Color.BLACK);
+		textPane.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if (e.getClickCount() == 2) {
+					showHideButtons();
+				}
+			}
+		});
+		textPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("H"), "ShowHideButtons");
+		textPane.getActionMap().put("ShowHideButtons", new AbstractAction() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				showHideButtons();
+			}
+		});
+
+		SimpleAttributeSet textStyle = new SimpleAttributeSet();
+		StyleConstants.setAlignment(textStyle, StyleConstants.ALIGN_CENTER);
+		StyleConstants.setForeground(textStyle, Color.WHITE);
+		StyleConstants.setFontFamily(textStyle, "sans-serif");
+		StyleConstants.setFontSize(textStyle, 32);
+		StyleConstants.setBold(textStyle, true);
+		StyledDocument textDoc = textPane.getStyledDocument();
+		textDoc.setParagraphAttributes(0, 0, textStyle, true);
+
+		openButton.setFocusable(false);
+		previousButton.setFocusable(false);
+		backwardButton.setFocusable(false);
+		playOrPauseButton.setFocusable(false);
+		stopButton.setFocusable(false);
+		forwardButton.setFocusable(false);
+		nextButton.setFocusable(false);
 
 		Container pane = frame.getContentPane();
 		pane.setLayout(new GridBagLayout());
@@ -62,12 +101,11 @@ public class View implements Observer {
 		constraints.gridx = 0;
 		constraints.gridy = 0;
 		constraints.gridwidth = GridBagConstraints.REMAINDER;
-		constraints.insets = new Insets(10, 10, 5, 10);
 		pane.add(textPane, constraints);
 		constraints.gridx = 0;
 		constraints.gridy = 1;
 		constraints.gridwidth = 1;
-		constraints.insets = new Insets(5, 10, 10, 0);
+		constraints.insets = new Insets(10, 10, 10, 0);
 		pane.add(openButton, constraints);
 		constraints.gridx = 1;
 		pane.add(previousButton, constraints);
@@ -82,30 +120,9 @@ public class View implements Observer {
 		constraints.gridx = 6;
 		pane.add(nextButton, constraints);
 
-		textPane.setEditable(false);
-		textPane.setFocusable(false);
-		textPane.setPreferredSize(new Dimension(1000, 100));
-		textPane.setLocation(100, 100);
-		textPane.setLocation(10, 10);
-		textPane.setBackground(Color.BLACK);
-
-		openButton.setFocusable(false);
-		previousButton.setFocusable(false);
-		backwardButton.setFocusable(false);
-		playOrPauseButton.setFocusable(false);
-		stopButton.setFocusable(false);
-		forwardButton.setFocusable(false);
-		nextButton.setFocusable(false);
-
-		SimpleAttributeSet textStyle = new SimpleAttributeSet();
-		StyleConstants.setAlignment(textStyle, StyleConstants.ALIGN_CENTER);
-		StyleConstants.setForeground(textStyle, Color.WHITE);
-		StyleConstants.setFontFamily(textStyle, "sans-serif");
-		StyleConstants.setFontSize(textStyle, 32);
-		StyleConstants.setBold(textStyle, true);
-		StyledDocument textDoc = textPane.getStyledDocument();
-		textDoc.setParagraphAttributes(0, 0, textStyle, true);
-
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setLocation(300, 700);
+		frame.setUndecorated(true);
 		frame.pack();
 		frame.setVisible(true);
 	}
@@ -126,8 +143,8 @@ public class View implements Observer {
 			}
 		};
 		openButton.addActionListener(openAction);
-		openButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ENTER"), "Open");
-		openButton.getActionMap().put("Open", openAction);
+		textPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("O"), "Open");
+		textPane.getActionMap().put("Open", openAction);
 
 		// Previous.
 		Action previousAction = new AbstractAction() {
@@ -139,8 +156,8 @@ public class View implements Observer {
 			}
 		};
 		previousButton.addActionListener(previousAction);
-		previousButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("UP"), "Previous");
-		previousButton.getActionMap().put("Previous", previousAction);
+		textPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("P"), "Previous");
+		textPane.getActionMap().put("Previous", previousAction);
 
 		// Backward.
 		Action backwardAction = new AbstractAction() {
@@ -152,8 +169,8 @@ public class View implements Observer {
 			}
 		};
 		backwardButton.addActionListener(backwardAction);
-		backwardButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("LEFT"), "Backward");
-		backwardButton.getActionMap().put("Backward", backwardAction);
+		textPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("B"), "Backward");
+		textPane.getActionMap().put("Backward", backwardAction);
 
 		// Play or pause.
 		Action playOrPauseAction = new AbstractAction() {
@@ -165,11 +182,9 @@ public class View implements Observer {
 				changePlayState(!isPlaying);
 			}
 		};
-		playOrPauseButton.setFocusable(false);
 		playOrPauseButton.addActionListener(playOrPauseAction);
-		playOrPauseButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("SPACE"),
-				"PlayOrPause");
-		playOrPauseButton.getActionMap().put("PlayOrPause", playOrPauseAction);
+		textPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("SPACE"), "PlayOrPause");
+		textPane.getActionMap().put("PlayOrPause", playOrPauseAction);
 
 		// Stop.
 		Action stopAction = new AbstractAction() {
@@ -182,8 +197,8 @@ public class View implements Observer {
 			}
 		};
 		stopButton.addActionListener(stopAction);
-		stopButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ESCAPE"), "Stop");
-		stopButton.getActionMap().put("Stop", stopAction);
+		textPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("S"), "Stop");
+		textPane.getActionMap().put("Stop", stopAction);
 
 		// Forward.
 		Action forwardAction = new AbstractAction() {
@@ -195,8 +210,8 @@ public class View implements Observer {
 			}
 		};
 		forwardButton.addActionListener(forwardAction);
-		forwardButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("RIGHT"), "Forward");
-		forwardButton.getActionMap().put("Forward", forwardAction);
+		textPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("F"), "Forward");
+		textPane.getActionMap().put("Forward", forwardAction);
 
 		// Next.
 		Action nextAction = new AbstractAction() {
@@ -209,13 +224,25 @@ public class View implements Observer {
 			}
 		};
 		nextButton.addActionListener(nextAction);
-		nextButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("DOWN"), "Next");
-		nextButton.getActionMap().put("Next", nextAction);
+		textPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("N"), "Next");
+		textPane.getActionMap().put("Next", nextAction);
 	}
 
 	private void changePlayState(boolean newPlayState) {
 		this.isPlaying = newPlayState;
 		playOrPauseButton.setText(newPlayState ? PAUSE_EMOJI : PLAY_EMOJI);
+	}
+
+	private void showHideButtons() {
+		isButtonVisible = !isButtonVisible;
+		openButton.setVisible(isButtonVisible);
+		previousButton.setVisible(isButtonVisible);
+		backwardButton.setVisible(isButtonVisible);
+		playOrPauseButton.setVisible(isButtonVisible);
+		stopButton.setVisible(isButtonVisible);
+		forwardButton.setVisible(isButtonVisible);
+		nextButton.setVisible(isButtonVisible);
+		frame.pack();
 	}
 
 	@Override
