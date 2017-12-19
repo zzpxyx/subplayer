@@ -42,10 +42,8 @@ public class Model extends Observable {
 			// Schedule next event.
 			scheduler = new Timer();
 			scheduler.schedule(new EventHandler(), Math.max(getNextEventDelay() + offset - currentEventElapsedTime, 0));
-
-			isPlaying = true;
 		}
-
+		isPlaying = true;
 	}
 
 	public synchronized void pause() {
@@ -55,9 +53,8 @@ public class Model extends Observable {
 
 			// Save current state.
 			currentEventElapsedTime = System.currentTimeMillis() - currentEventSystemTimestamp;
-
-			isPlaying = false;
 		}
+		isPlaying = false;
 	}
 
 	public synchronized void next() {

@@ -76,6 +76,10 @@ class ModelTest implements Observer {
 				model.next();
 				Thread.sleep(150);
 				model.previous();
+				Thread.sleep(250);
+				model.next();
+				model.next();
+				model.previous();
 				latch.await();
 			} catch (InterruptedException e) {
 				// Test outcome is back or test went wrong. No need to do anything here.
