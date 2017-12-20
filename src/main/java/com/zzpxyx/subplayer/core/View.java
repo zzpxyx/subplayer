@@ -55,9 +55,7 @@ public class View implements Observer {
 	public View() {
 		textPane.setEditable(false);
 		textPane.setFocusable(false);
-		textPane.setPreferredSize(new Dimension(1000, 100));
-		textPane.setLocation(100, 100);
-		textPane.setLocation(10, 10);
+		textPane.setPreferredSize(new Dimension(1500, 120));
 		textPane.setBackground(Color.BLACK);
 		textPane.addMouseListener(new MouseAdapter() {
 			@Override
@@ -81,7 +79,7 @@ public class View implements Observer {
 		StyleConstants.setAlignment(textStyle, StyleConstants.ALIGN_CENTER);
 		StyleConstants.setForeground(textStyle, Color.WHITE);
 		StyleConstants.setFontFamily(textStyle, "sans-serif");
-		StyleConstants.setFontSize(textStyle, 32);
+		StyleConstants.setFontSize(textStyle, 40);
 		StyleConstants.setBold(textStyle, true);
 		StyledDocument textDoc = textPane.getStyledDocument();
 		textDoc.setParagraphAttributes(0, 0, textStyle, true);
@@ -122,7 +120,7 @@ public class View implements Observer {
 
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setAlwaysOnTop(true);
-		frame.setLocation(300, 700);
+		frame.setLocation(200, 900);
 		frame.setUndecorated(true);
 		frame.pack();
 		frame.setVisible(true);
