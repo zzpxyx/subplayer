@@ -121,6 +121,7 @@ public class View implements Observer {
 		pane.add(nextButton, constraints);
 
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setAlwaysOnTop(true);
 		frame.setLocation(300, 700);
 		frame.setUndecorated(true);
 		frame.pack();
