@@ -25,7 +25,7 @@ import com.zzpxyx.subplayer.parser.SrtParser;
 class ModelTest implements Observer {
 	private static final String RESOURCE_PATH = "src/test/resources/";
 	private static final long EVENT_TIME_ERROR_RANGE = 5;
-	private static final long TIMEOUT_MARGIN = 100;
+	private static final long TIMEOUT_MARGIN = 1000;
 
 	private List<Event> expectedList;
 	private List<Event> actualList;
