@@ -10,9 +10,6 @@ public class Controller {
 		this.model = model;
 		this.view = view;
 		this.model.addObserver(this.view);
-
-		// TODO: Make this an item in settings.
-		setSubtitleFile("/tmp/a.srt");
 	}
 
 	public void playOrPause() {
