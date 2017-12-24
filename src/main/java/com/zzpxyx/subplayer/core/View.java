@@ -9,6 +9,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
@@ -38,6 +39,8 @@ public class View implements Observer {
 	private static final String FORWARD_EMOJI = String.valueOf(Character.toChars(0x23E9));
 	private static final String NEXT_EMOJI = String.valueOf(Character.toChars(0x23ED));
 
+	private int mouseCurrentX;
+	private int mouseCurrentY;
 	private boolean isPlaying = false;
 	private boolean isButtonVisible = true;
 	private JFrame frame = new JFrame("SubPlayer");
@@ -59,10 +62,25 @@ public class View implements Observer {
 		textPane.setBackground(Color.BLACK);
 		textPane.addMouseListener(new MouseAdapter() {
 			@Override
+			public void mousePressed(MouseEvent e) {
+				mouseCurrentX = e.getXOnScreen();
+				mouseCurrentY = e.getYOnScreen();
+			}
+
+			@Override
 			public void mouseClicked(MouseEvent e) {
 				if (e.getClickCount() == 2) {
 					showHideButtons();
 				}
+			}
+		});
+		textPane.addMouseMotionListener(new MouseMotionAdapter() {
+			@Override
+			public void mouseDragged(MouseEvent e) {
+				frame.setLocation(e.getXOnScreen() - mouseCurrentX + frame.getX(),
+						e.getYOnScreen() - mouseCurrentY + frame.getY());
+				mouseCurrentX = e.getXOnScreen();
+				mouseCurrentY = e.getYOnScreen();
 			}
 		});
 		textPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("H"), "ShowHideButtons");
