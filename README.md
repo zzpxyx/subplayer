@@ -10,7 +10,7 @@ This application is under heavy development. Currently, it is only a working pro
 - No user settings.
 
 ## Build
-The project's release page on GitHub has pre-built packages.
+The [project's release page on GitHub](https://github.com/zzpxyx/subplayer/releases) has pre-built packages.
 
 Building from source requires JDK 1.8 and Apache Maven 3:
 
@@ -37,5 +37,7 @@ From left to right, the buttons on the user interface are:
 - Next: jump ahead to the next subtitle. Shortcut key "N".
 
 Double clicking on the black displaying area will hide and show the buttons. Shortcut key "H".
+
+Mouse dragging the black displaying area will move the entire application window. 
 
 Currently, there is no "exit" button. Please use your operating system's window close function or press ALT+F4 in most cases.
