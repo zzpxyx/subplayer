@@ -1,5 +1,7 @@
 SubPlayer
 =========
+[![Build Status](https://travis-ci.org/zzpxyx/subplayer.svg?branch=master)](https://travis-ci.org/zzpxyx/subplayer)
+
 A simple subtitle player.
 
 ## Notice
