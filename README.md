@@ -43,3 +43,7 @@ Double clicking on the black displaying area will hide and show the buttons. Sho
 Mouse dragging the black displaying area will move the entire application window. 
 
 Currently, there is no "exit" button. Please use your operating system's window close function or press ALT+F4 in most cases.
+
+
+## LICENSE
+See file LICENSE.
