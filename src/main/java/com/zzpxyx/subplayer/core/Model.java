@@ -17,6 +17,7 @@ public class Model extends Observable {
 	private long currentEventElapsedTime = 0;
 	private long currentEventSystemTimestamp; // Auxiliary timestamp for time axis stabilization.
 	private long offset = 0;
+	private double speed = 1;
 
 	public Model() {
 		eventList.add(new Event(Event.Type.Dummy, 0, ""));
@@ -105,41 +106,53 @@ public class Model extends Observable {
 		eventList = list;
 	}
 
+	public synchronized void increaseSpeed() {
+		adjustSpeed(-0.02);
+	}
+
+	public synchronized void decreaseSpeed() {
+		adjustSpeed(0.02);
+	}
+
 	private synchronized void jumpToEvent(int newEventIndex) {
-		boolean wasPlaying = isPlaying;
+		pauseRunResume(() -> {
+			// Adjust start point.
+			currentEventIndex = newEventIndex;
+			currentEventElapsedTime = 0;
+			offset = 0;
 
-		// Pause the play.
-		pause();
-
-		// Adjust start point.
-		currentEventIndex = newEventIndex;
-		currentEventElapsedTime = 0;
-		offset = 0;
-
-		// Update displaying subtitles.
-		Event currentEvent = eventList.get(currentEventIndex);
-		visibleSubtitleList.clear();
-		if (currentEvent.type == Event.Type.Start) {
-			// Only show subtitle if jumping to a start event.
-			visibleSubtitleList.add(currentEvent.text);
-		}
-		setChanged();
-		notifyObservers(visibleSubtitleList);
-
-		// Resume playing if necessary.
-		if (wasPlaying) {
-			play();
-		}
+			// Update displaying subtitles.
+			Event currentEvent = eventList.get(currentEventIndex);
+			visibleSubtitleList.clear();
+			if (currentEvent.type == Event.Type.Start) {
+				// Only show subtitle if jumping to a start event.
+				visibleSubtitleList.add(currentEvent.text);
+			}
+			setChanged();
+			notifyObservers(visibleSubtitleList);
+		});
 	}
 
 	private synchronized void adjustOffset(long time) {
+		pauseRunResume(() -> {
+			offset += time;
+		});
+	}
+
+	private synchronized void adjustSpeed(double increment) {
+		pauseRunResume(() -> {
+			speed += increment;
+		});
+	}
+
+	private synchronized void pauseRunResume(Runnable runnable) {
 		boolean wasPlaying = isPlaying;
 
 		// Pause the play.
 		pause();
 
-		// Adjust the offset.
-		offset += time;
+		// Execute the runnable.
+		runnable.run();
 
 		// Resume playing if necessary.
 		if (wasPlaying) {
@@ -148,7 +161,7 @@ public class Model extends Observable {
 	}
 
 	private synchronized long getNextEventDelay() {
-		return eventList.get(currentEventIndex + 1).time - eventList.get(currentEventIndex).time;
+		return Math.round((eventList.get(currentEventIndex + 1).time - eventList.get(currentEventIndex).time) * speed);
 	}
 
 	/**
@@ -158,26 +171,21 @@ public class Model extends Observable {
 		@Override
 		public void run() {
 			synchronized (Model.this) {
-				// Save states for "current" event. All "current" event will become "previous".
-				Event previousEvent = eventList.get(currentEventIndex);
+				// The "current" event is becoming the "previous" event.
 				long previousEventSystemTimestamp = currentEventSystemTimestamp;
-
-				// Move to the next event.
-				currentEventIndex++;
-				Event currentEvent = eventList.get(currentEventIndex);
 				currentEventSystemTimestamp = System.currentTimeMillis();
-
-				// Calculate offset.
-				long elapsedTimeScheduled = currentEvent.time - previousEvent.time + offset;
 				long elapsedTimeRealWorld = currentEventSystemTimestamp - previousEventSystemTimestamp;
-				offset = elapsedTimeScheduled - elapsedTimeRealWorld;
+				long elapsedTimeScheduled = getNextEventDelay() + offset; // Maybe negative due to forward function.
+				offset = elapsedTimeScheduled - elapsedTimeRealWorld; // Calculate the new offset.
 
-				// Schedule next event.
+				// Move to the next event and schedule it.
+				currentEventIndex++;
 				if (currentEventIndex < eventList.size() - 1) {
 					scheduler.schedule(new EventHandler(), Math.max(getNextEventDelay() + offset, 0));
 				}
 
 				// Update displaying subtitles.
+				Event currentEvent = eventList.get(currentEventIndex);
 				switch (currentEvent.type) {
 				case Dummy:
 					break;
