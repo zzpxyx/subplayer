@@ -27,6 +27,7 @@ class ModelTest implements Observer {
 	private static final long EVENT_TIME_ERROR_RANGE = 5;
 	private static final long TIMEOUT_MARGIN = 1000;
 
+	private List<Event> eventList;
 	private List<Event> expectedList;
 	private List<Event> actualList;
 	private CountDownLatch latch;
@@ -36,7 +37,7 @@ class ModelTest implements Observer {
 	@Test
 	void testPlayPauseStop() {
 		runTest("Test.srt", "PlayPauseStop.out", () -> {
-			startTimestamp = System.currentTimeMillis();
+			startTimestamp = System.currentTimeMillis(); // Too slow when putting this within runTest().
 			try {
 				model.play();
 				Thread.sleep(50);
@@ -111,6 +112,22 @@ class ModelTest implements Observer {
 		});
 	}
 
+	@Test
+	void testSetEventList() {
+		runTest("Test.srt", "SetEventList.out", () -> {
+			startTimestamp = System.currentTimeMillis();
+			try {
+				model.play();
+				Thread.sleep(250);
+				model.setEventList(eventList);
+				model.play();
+				latch.await();
+			} catch (InterruptedException e) {
+				// Test outcome is back or test went wrong. No need to do anything here.
+			}
+		});
+	}
+
 	@Override
 	public void update(Observable model, Object arg) {
 		if (arg instanceof List<?>) {
@@ -123,7 +140,7 @@ class ModelTest implements Observer {
 	}
 
 	private void runTest(String dataFileName, String outputFileName, Executable test) {
-		List<Event> eventList = SrtParser.getEventList(RESOURCE_PATH + dataFileName);
+		eventList = SrtParser.getEventList(RESOURCE_PATH + dataFileName);
 		expectedList = parseOutputFile(RESOURCE_PATH + outputFileName);
 		actualList = new LinkedList<>();
 		latch = new CountDownLatch(expectedList.size());
