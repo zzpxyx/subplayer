@@ -23,16 +23,6 @@ public class Model extends Observable {
 		eventList.add(new Event(Event.Type.Dummy, 0, ""));
 	}
 
-	public synchronized void playOrPause() {
-		if (isPlaying) {
-			// We want to pause now.
-			pause();
-		} else {
-			// We want to play now.
-			play();
-		}
-	}
-
 	public synchronized void play() {
 		if (!isPlaying && currentEventIndex < eventList.size() - 1) {
 			// Treat as if resuming. A new play equals to resuming from the start.
@@ -82,14 +72,6 @@ public class Model extends Observable {
 		jumpToEvent(newStartEventIndex); // Now either a start event is found, or jump to the start of the event list.
 	}
 
-	public synchronized void forward() {
-		adjustOffset(-50);
-	}
-
-	public synchronized void backward() {
-		adjustOffset(50);
-	}
-
 	public synchronized void stop() {
 		// Pause the play.
 		pause();
@@ -106,12 +88,16 @@ public class Model extends Observable {
 		eventList = list;
 	}
 
-	public synchronized void increaseSpeed() {
-		adjustSpeed(-0.02);
+	public synchronized void adjustOffset(long time) {
+		pauseRunResume(() -> {
+			offset += time;
+		});
 	}
 
-	public synchronized void decreaseSpeed() {
-		adjustSpeed(0.02);
+	public synchronized void adjustSpeed(double increment) {
+		pauseRunResume(() -> {
+			speed += increment;
+		});
 	}
 
 	private synchronized void jumpToEvent(int newEventIndex) {
@@ -130,18 +116,6 @@ public class Model extends Observable {
 			}
 			setChanged();
 			notifyObservers(visibleSubtitleList);
-		});
-	}
-
-	private synchronized void adjustOffset(long time) {
-		pauseRunResume(() -> {
-			offset += time;
-		});
-	}
-
-	private synchronized void adjustSpeed(double increment) {
-		pauseRunResume(() -> {
-			speed += increment;
 		});
 	}
 

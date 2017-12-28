@@ -12,8 +12,12 @@ public class Controller {
 		this.model.addObserver(this.view);
 	}
 
-	public void playOrPause() {
-		model.playOrPause();
+	public void playOrPause(boolean isPlaying) {
+		if (isPlaying) {
+			model.play();
+		} else {
+			model.pause();
+		}
 	}
 
 	public void next() {
@@ -24,19 +28,27 @@ public class Controller {
 		model.previous();
 	}
 
-	public void forward() {
-		model.forward();
-	}
-
-	public void backward() {
-		model.backward();
-	}
-
 	public void stop() {
 		model.stop();
 	}
 
 	public void setSubtitleFile(String fileName) {
 		model.setEventList(SrtParser.getEventList(fileName));
+	}
+
+	public void forward() {
+		model.adjustOffset(-50);
+	}
+
+	public void backward() {
+		model.adjustOffset(50);
+	}
+
+	public void increaseSpeed() {
+		model.adjustSpeed(-0.02);
+	}
+
+	public void decreaseSpeed() {
+		model.adjustSpeed(0.02);
 	}
 }

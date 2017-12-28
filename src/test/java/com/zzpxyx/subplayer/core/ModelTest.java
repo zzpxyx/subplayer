@@ -47,15 +47,15 @@ class ModelTest implements Observer {
 				Thread.sleep(100);
 				model.pause();
 				Thread.sleep(100);
-				model.playOrPause();
+				model.play();
 				Thread.sleep(100);
 				model.stop();
 				Thread.sleep(50);
-				model.playOrPause();
+				model.play();
 				Thread.sleep(50);
-				model.playOrPause();
+				model.pause();
 				Thread.sleep(50);
-				model.playOrPause();
+				model.play();
 				latch.await();
 			} catch (InterruptedException e) {
 				// Test outcome is back or test went wrong. No need to do anything here.
@@ -64,8 +64,8 @@ class ModelTest implements Observer {
 	}
 
 	@Test
-	void testPlayNextPrevious() {
-		runTest("Test.srt", "PlayNextPrevious.out", () -> {
+	void testNextPrevious() {
+		runTest("Test.srt", "NextPrevious.out", () -> {
 			startTimestamp = System.currentTimeMillis();
 			try {
 				model.next();
@@ -89,22 +89,21 @@ class ModelTest implements Observer {
 	}
 
 	@Test
-	void testPlayForwardBackward() {
-		runTest("Test.srt", "PlayForwardBackward.out", () -> {
+	void testForwardBackward() {
+		runTest("Test.srt", "ForwardBackward.out", () -> {
 			startTimestamp = System.currentTimeMillis();
 			try {
-				model.forward();
+				model.adjustOffset(-50);
 				Thread.sleep(50);
-				model.backward();
+				model.adjustOffset(50);
 				Thread.sleep(50);
-				model.forward();
+				model.adjustOffset(-50);
 				Thread.sleep(50);
 				model.play();
-				model.forward();
-				model.forward();
+				model.adjustOffset(-50);
+				model.adjustOffset(-50);
 				Thread.sleep(100);
-				model.backward();
-				model.backward();
+				model.adjustOffset(100);
 				latch.await();
 			} catch (InterruptedException e) {
 				// Test outcome is back or test went wrong. No need to do anything here.
@@ -121,6 +120,23 @@ class ModelTest implements Observer {
 				Thread.sleep(250);
 				model.setEventList(eventList);
 				model.play();
+				latch.await();
+			} catch (InterruptedException e) {
+				// Test outcome is back or test went wrong. No need to do anything here.
+			}
+		});
+	}
+
+	@Test
+	void testIncreaseDecreaseSpeed() {
+		runTest("Test.srt", "IncreaseDecreaseSpeed.out", () -> {
+			startTimestamp = System.currentTimeMillis();
+			try {
+				model.adjustSpeed(0.02);
+				model.adjustSpeed(0.08);
+				model.play();
+				Thread.sleep(150);
+				model.adjustSpeed(-0.6);
 				latch.await();
 			} catch (InterruptedException e) {
 				// Test outcome is back or test went wrong. No need to do anything here.

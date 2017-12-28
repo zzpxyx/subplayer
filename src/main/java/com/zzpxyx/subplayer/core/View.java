@@ -195,7 +195,7 @@ public class View implements Observer {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				controller.playOrPause();
+				controller.playOrPause(!isPlaying);
 				changePlayState(!isPlaying);
 			}
 		};
