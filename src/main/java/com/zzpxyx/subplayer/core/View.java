@@ -151,7 +151,7 @@ public class View implements Observer {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				fileChooser.setFileFilter(new FileNameExtensionFilter("Subtitle files", "srt"));
+				fileChooser.setFileFilter(new FileNameExtensionFilter("Subtitle files", "srt", "ssa", "ass"));
 				if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
 					String fileName = fileChooser.getSelectedFile().getAbsolutePath();
 					controller.setSubtitleFile(fileName);

@@ -1,5 +1,6 @@
 package com.zzpxyx.subplayer.parser;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.zzpxyx.subplayer.event.Event;
@@ -12,9 +13,11 @@ public class AdaptvieParser {
 			return SrtParser.getEventList(fileName);
 		case "ssa":
 		case "ass":
-			return null;
+			return SsaParser.getEventList(fileName);
 		default:
-			return null;
+			ArrayList<Event> list = new ArrayList<>();
+			list.add(new Event(Event.Type.Dummy, 0, "")); // Add a dummy head.
+			return list;
 		}
 	}
 }

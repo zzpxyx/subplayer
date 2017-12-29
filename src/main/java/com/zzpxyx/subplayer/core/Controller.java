@@ -1,6 +1,6 @@
 package com.zzpxyx.subplayer.core;
 
-import com.zzpxyx.subplayer.parser.SrtParser;
+import com.zzpxyx.subplayer.parser.AdaptvieParser;
 
 public class Controller {
 	private Model model;
@@ -33,7 +33,7 @@ public class Controller {
 	}
 
 	public void setSubtitleFile(String fileName) {
-		model.setEventList(SrtParser.getEventList(fileName));
+		model.setEventList(AdaptvieParser.getEventList(fileName));
 	}
 
 	public void forward() {
