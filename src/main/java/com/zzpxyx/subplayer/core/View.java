@@ -2,6 +2,7 @@ package com.zzpxyx.subplayer.core;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -53,6 +54,9 @@ public class View implements Observer {
 	private static final String STOP_EMOJI = String.valueOf(Character.toChars(0x23F9));
 	private static final String FORWARD_EMOJI = String.valueOf(Character.toChars(0x23E9));
 	private static final String NEXT_EMOJI = String.valueOf(Character.toChars(0x23ED));
+	private static final String INCREASE_SPEED_EMOJI = String.valueOf(Character.toChars(0x2795));
+	private static final String DECREASE_SPEED_EMOJI = String.valueOf(Character.toChars(0x2796));
+	private static final String EXIT_EMOJI = String.valueOf(Character.toChars(0x274C));
 
 	private int mouseCurrentX;
 	private int mouseCurrentY;
@@ -70,6 +74,9 @@ public class View implements Observer {
 	private JButton stopButton = new JButton(STOP_EMOJI);
 	private JButton forwardButton = new JButton(FORWARD_EMOJI);
 	private JButton nextButton = new JButton(NEXT_EMOJI);
+	private JButton increaseSpeedButton = new JButton(INCREASE_SPEED_EMOJI);
+	private JButton decreaseSpeedButton = new JButton(DECREASE_SPEED_EMOJI);
+	private JButton exitButton = new JButton(EXIT_EMOJI);
 	private JFileChooser fileChooser = new JFileChooser();
 	private JComboBox<String> encodingComboBox = new JComboBox<>(
 			Charset.availableCharsets().keySet().toArray(new String[0]));
@@ -149,14 +156,6 @@ public class View implements Observer {
 		StyledDocument textDoc = textPane.getStyledDocument();
 		textDoc.setParagraphAttributes(0, 0, textStyle, true);
 
-		openButton.setFocusable(false);
-		previousButton.setFocusable(false);
-		backwardButton.setFocusable(false);
-		playOrPauseButton.setFocusable(false);
-		stopButton.setFocusable(false);
-		forwardButton.setFocusable(false);
-		nextButton.setFocusable(false);
-
 		Container pane = frame.getContentPane();
 		pane.setLayout(new GridBagLayout());
 		GridBagConstraints constraints = new GridBagConstraints();
@@ -182,6 +181,18 @@ public class View implements Observer {
 		pane.add(forwardButton, constraints);
 		constraints.gridx = 6;
 		pane.add(nextButton, constraints);
+		constraints.gridx = 7;
+		pane.add(decreaseSpeedButton, constraints);
+		constraints.gridx = 8;
+		pane.add(increaseSpeedButton, constraints);
+		constraints.gridx = 9;
+		pane.add(exitButton, constraints);
+
+		for (Component component : frame.getContentPane().getComponents()) {
+			if (component instanceof JButton) {
+				component.setFocusable(false);
+			}
+		}
 
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setAlwaysOnTop(true);
@@ -277,7 +288,6 @@ public class View implements Observer {
 
 		// Next.
 		Action nextAction = new AbstractAction() {
-
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -288,6 +298,45 @@ public class View implements Observer {
 		nextButton.addActionListener(nextAction);
 		textPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("N"), "Next");
 		textPane.getActionMap().put("Next", nextAction);
+
+		// Increase speed.
+		Action increaseSpeedAction = new AbstractAction() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				controller.increaseSpeed();
+			}
+		};
+		increaseSpeedButton.addActionListener(increaseSpeedAction);
+		textPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("I"), "IncreaseSpeed");
+		textPane.getActionMap().put("IncreaseSpeed", increaseSpeedAction);
+
+		// Decrease speed.
+		Action decreaseSpeedAction = new AbstractAction() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				controller.decreaseSpeed();
+			}
+		};
+		decreaseSpeedButton.addActionListener(decreaseSpeedAction);
+		textPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("D"), "DecreaseSpeed");
+		textPane.getActionMap().put("DecreaseSpeed", decreaseSpeedAction);
+
+		// Exit.
+		Action exitAction = new AbstractAction() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.exit(0);
+			}
+		};
+		exitButton.addActionListener(exitAction);
+		textPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ESCAPE"), "Exit");
+		textPane.getActionMap().put("Exit", exitAction);
 	}
 
 	private void changePlayState(boolean newPlayState) {
@@ -297,13 +346,11 @@ public class View implements Observer {
 
 	private void showHideButtons() {
 		isButtonVisible = !isButtonVisible;
-		openButton.setVisible(isButtonVisible);
-		previousButton.setVisible(isButtonVisible);
-		backwardButton.setVisible(isButtonVisible);
-		playOrPauseButton.setVisible(isButtonVisible);
-		stopButton.setVisible(isButtonVisible);
-		forwardButton.setVisible(isButtonVisible);
-		nextButton.setVisible(isButtonVisible);
+		for (Component component : frame.getContentPane().getComponents()) {
+			if (component instanceof JButton) {
+				component.setVisible(isButtonVisible);
+			}
+		}
 		frame.pack();
 	}
 
