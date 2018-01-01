@@ -1,6 +1,7 @@
 package com.zzpxyx.subplayer.parser;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -12,10 +13,10 @@ import java.util.stream.Stream;
 import com.zzpxyx.subplayer.event.Event;
 
 public class SsaParser {
-	public static List<Event> getEventList(String fileName) {
+	public static List<Event> getEventList(String fileName, String encodingName) throws IOException {
 		ArrayList<Event> list = new ArrayList<>();
 		list.add(new Event(Event.Type.Dummy, 0, "")); // Add a dummy head.
-		try (Stream<String> stream = Files.lines(Paths.get(fileName))) {
+		try (Stream<String> stream = Files.lines(Paths.get(fileName), Charset.forName(encodingName))) {
 			stream.filter(line -> line.startsWith("Dialogue:")).forEach(line -> {
 				String[] fields = line.split(",", 10);
 				String text = fields[9].trim();
@@ -35,8 +36,6 @@ public class SsaParser {
 					list.add(new Event(Event.Type.End, endTime, text));
 				}
 			});
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
 		Collections.sort(list);
 		return list;

@@ -2,6 +2,7 @@ package com.zzpxyx.subplayer.parser;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -17,10 +18,10 @@ public class SrtParser {
 		SectionBegin, Time, Text, SectionEnd
 	}
 
-	public static List<Event> getEventList(String fileName) {
+	public static List<Event> getEventList(String fileName, String encodingName) throws IOException {
 		ArrayList<Event> list = new ArrayList<>();
 		list.add(new Event(Event.Type.Dummy, 0, "")); // Add a dummy head.
-		try (BufferedReader reader = Files.newBufferedReader(Paths.get(fileName))) {
+		try (BufferedReader reader = Files.newBufferedReader(Paths.get(fileName), Charset.forName(encodingName))) {
 			String line;
 			String text = "";
 			long startTime = 0;
@@ -72,8 +73,6 @@ public class SrtParser {
 					break;
 				}
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
 		Collections.sort(list);
 		return list;

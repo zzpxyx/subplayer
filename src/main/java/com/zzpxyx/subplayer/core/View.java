@@ -1,5 +1,6 @@
 package com.zzpxyx.subplayer.core;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -7,9 +8,15 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
@@ -17,20 +24,28 @@ import java.util.stream.Collectors;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
 import javax.swing.JTextPane;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
+import javax.swing.border.EtchedBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
+import com.zzpxyx.subplayer.event.Event;
+import com.zzpxyx.subplayer.parser.AdaptvieParser;
+
 public class View implements Observer {
-	private static final String OPEN_EMOJI = String.valueOf(Character.toChars(0x23CF));
+	private static final String OPEN_EMOJI = String.valueOf(Character.toChars(0x1F5C1));
 	private static final String PREVIOUS_EMOJI = String.valueOf(Character.toChars(0x23EE));
 	private static final String BACKWARD_EMOJI = String.valueOf(Character.toChars(0x23EA));
 	private static final String PLAY_EMOJI = String.valueOf(Character.toChars(0x25B6));
@@ -43,9 +58,11 @@ public class View implements Observer {
 	private int mouseCurrentY;
 	private boolean isPlaying = false;
 	private boolean isButtonVisible = true;
+	private String text;
+	private List<Event> eventList;
 	private JFrame frame = new JFrame("SubPlayer");
 	private JTextPane textPane = new JTextPane();
-	private JFileChooser fileChooser = new JFileChooser();
+	private JTextArea contentTextArea = new JTextArea();
 	private JButton openButton = new JButton(OPEN_EMOJI);
 	private JButton previousButton = new JButton(PREVIOUS_EMOJI);
 	private JButton backwardButton = new JButton(BACKWARD_EMOJI);
@@ -53,9 +70,39 @@ public class View implements Observer {
 	private JButton stopButton = new JButton(STOP_EMOJI);
 	private JButton forwardButton = new JButton(FORWARD_EMOJI);
 	private JButton nextButton = new JButton(NEXT_EMOJI);
-	private String text;
+	private JFileChooser fileChooser = new JFileChooser();
+	private JComboBox<String> encodingComboBox = new JComboBox<>(
+			Charset.availableCharsets().keySet().toArray(new String[0]));
+	private JPanel previewPanel = new JPanel(new BorderLayout());
 
 	public View() {
+		encodingComboBox.setSelectedItem(Charset.defaultCharset().name());
+		encodingComboBox.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				updatePreview();
+			}
+
+		});
+
+		previewPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(0, 5, 0, 0),
+				BorderFactory.createEtchedBorder(EtchedBorder.LOWERED)));
+		previewPanel.add(encodingComboBox, BorderLayout.PAGE_START);
+		previewPanel.add(contentTextArea, BorderLayout.CENTER);
+
+		fileChooser.setAccessory(previewPanel);
+		fileChooser.setAcceptAllFileFilterUsed(false);
+		fileChooser.setFileFilter(
+				new FileNameExtensionFilter("Subtitle files (*.srt, *.ssa, *.ass)", "srt", "ssa", "ass"));
+		fileChooser.addPropertyChangeListener(new PropertyChangeListener() {
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				if (evt.getPropertyName().equals(JFileChooser.SELECTED_FILE_CHANGED_PROPERTY)) {
+					updatePreview();
+				}
+			}
+		});
+
 		textPane.setEditable(false);
 		textPane.setFocusable(false);
 		textPane.setPreferredSize(new Dimension(1500, 120));
@@ -151,10 +198,8 @@ public class View implements Observer {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				fileChooser.setFileFilter(new FileNameExtensionFilter("Subtitle files", "srt", "ssa", "ass"));
 				if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
-					String fileName = fileChooser.getSelectedFile().getAbsolutePath();
-					controller.setSubtitleFile(fileName);
+					controller.setEventList(eventList);
 					changePlayState(false);
 				}
 			}
@@ -260,6 +305,22 @@ public class View implements Observer {
 		forwardButton.setVisible(isButtonVisible);
 		nextButton.setVisible(isButtonVisible);
 		frame.pack();
+	}
+
+	private void updatePreview() {
+		File file = fileChooser.getSelectedFile();
+		if (file != null) {
+			try {
+				eventList = AdaptvieParser.getEventList(file.getAbsolutePath(),
+						encodingComboBox.getSelectedItem().toString());
+				String sample = eventList.stream().filter(t -> t.type == Event.Type.Start).limit(10).map(t -> t.text)
+						.collect(Collectors.joining(System.lineSeparator()));
+				contentTextArea.setText(sample);
+			} catch (IOException e) {
+				contentTextArea.setText("Cannot open the selected file with the specified encoding.");
+			}
+
+		}
 	}
 
 	@Override

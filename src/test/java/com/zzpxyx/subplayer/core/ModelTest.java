@@ -156,7 +156,11 @@ class ModelTest implements Observer {
 	}
 
 	private void runTest(String dataFileName, String outputFileName, Executable test) {
-		eventList = SrtParser.getEventList(RESOURCE_PATH + dataFileName);
+		try {
+			eventList = SrtParser.getEventList(RESOURCE_PATH + dataFileName, "UTF-8");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		expectedList = parseOutputFile(RESOURCE_PATH + outputFileName);
 		actualList = new LinkedList<>();
 		latch = new CountDownLatch(expectedList.size());

@@ -1,6 +1,8 @@
 package com.zzpxyx.subplayer.core;
 
-import com.zzpxyx.subplayer.parser.AdaptvieParser;
+import java.util.List;
+
+import com.zzpxyx.subplayer.event.Event;
 
 public class Controller {
 	private Model model;
@@ -32,8 +34,8 @@ public class Controller {
 		model.stop();
 	}
 
-	public void setSubtitleFile(String fileName) {
-		model.setEventList(AdaptvieParser.getEventList(fileName));
+	public void setEventList(List<Event> eventList) {
+		model.setEventList(eventList);
 	}
 
 	public void forward() {
