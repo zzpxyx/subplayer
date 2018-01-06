@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.zzpxyx.subplayer</groupId>
 	<artifactId>subplayer</artifactId>
-	<version>0.1.0</version>
+	<version>0.2.0</version>
 	<name>SubPlayer</name>
 	<description>A simple subtitle player.</description>
 	<dependencies>
