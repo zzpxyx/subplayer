@@ -170,24 +170,25 @@ public class View implements Observer {
 		constraints.insets = new Insets(10, 10, 10, 0);
 		pane.add(openButton, constraints);
 		constraints.gridx = 1;
-		pane.add(previousButton, constraints);
-		constraints.gridx = 2;
-		pane.add(backwardButton, constraints);
-		constraints.gridx = 3;
 		pane.add(playOrPauseButton, constraints);
-		constraints.gridx = 4;
-		pane.add(stopButton, constraints);
+		constraints.gridx = 3;
+		pane.add(backwardButton, constraints);
 		constraints.gridx = 5;
+		pane.add(previousButton, constraints);
+		constraints.gridx = 7;
+		pane.add(decreaseSpeedButton, constraints);
+		constraints.gridx = 9;
+		pane.add(exitButton, constraints);
+		constraints.gridx = 2;
+		constraints.insets = new Insets(10, 0, 10, 0);
+		pane.add(stopButton, constraints);
+		constraints.gridx = 4;
 		pane.add(forwardButton, constraints);
 		constraints.gridx = 6;
 		pane.add(nextButton, constraints);
-		constraints.gridx = 7;
-		pane.add(decreaseSpeedButton, constraints);
 		constraints.gridx = 8;
 		pane.add(increaseSpeedButton, constraints);
-		constraints.gridx = 9;
-		pane.add(exitButton, constraints);
-
+		
 		for (Component component : frame.getContentPane().getComponents()) {
 			if (component instanceof JButton) {
 				component.setFocusable(false);
