@@ -5,19 +5,28 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferStrategy;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
@@ -33,17 +42,13 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
-import javax.swing.JTextPane;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledDocument;
 
 import com.zzpxyx.subplayer.event.Event;
-import com.zzpxyx.subplayer.parser.AdaptvieParser;
+import com.zzpxyx.subplayer.parser.AdaptiveParser;
 
 public class View implements Observer {
 	private static final String OPEN_EMOJI = String.valueOf(Character.toChars(0x1F5C1));
@@ -58,15 +63,27 @@ public class View implements Observer {
 	private static final String DECREASE_SPEED_EMOJI = String.valueOf(Character.toChars(0x2796));
 	private static final String EXIT_EMOJI = String.valueOf(Character.toChars(0x274C));
 
+	private static final Color NO_COLOR = new Color(0, 0, 0, 0);
+	private static final Font DEFAULT_FONT = new Font("sans-serif", Font.BOLD, 40);
+
+	private static enum actionKey {
+		Open, PlayOrPause, Stop, Backward, Forward, Previous, Next, DescreaseSpeed, IncreaseSpeed, Exit, ShowHideButtons
+	}
+
 	private int mouseCurrentX;
 	private int mouseCurrentY;
 	private boolean isPlaying = false;
 	private boolean isButtonVisible = true;
-	private String text;
+	private List<String> text = new LinkedList<String>();
 	private List<Event> eventList;
+	private BufferStrategy bufferStrategy;
+	private Color displayColor = Color.BLACK;
 	private JFrame frame = new JFrame("SubPlayer");
-	private JTextPane textPane = new JTextPane();
+	private JFileChooser fileChooser = new JFileChooser();
+	private JComboBox<String> encodingComboBox = new JComboBox<>(
+			Charset.availableCharsets().keySet().toArray(new String[0]));
 	private JTextArea contentTextArea = new JTextArea();
+	private JPanel controlPanel = new JPanel(new GridBagLayout());
 	private JButton openButton = new JButton(OPEN_EMOJI);
 	private JButton previousButton = new JButton(PREVIOUS_EMOJI);
 	private JButton backwardButton = new JButton(BACKWARD_EMOJI);
@@ -77,10 +94,42 @@ public class View implements Observer {
 	private JButton increaseSpeedButton = new JButton(INCREASE_SPEED_EMOJI);
 	private JButton decreaseSpeedButton = new JButton(DECREASE_SPEED_EMOJI);
 	private JButton exitButton = new JButton(EXIT_EMOJI);
-	private JFileChooser fileChooser = new JFileChooser();
-	private JComboBox<String> encodingComboBox = new JComboBox<>(
-			Charset.availableCharsets().keySet().toArray(new String[0]));
 	private JPanel previewPanel = new JPanel(new BorderLayout());
+	private JPanel displayPanel = new JPanel() {
+		private static final long serialVersionUID = 1L;
+
+		protected void paintComponent(Graphics g) {
+			super.paintComponent(g);
+			if (g instanceof Graphics2D) {
+				int componentWidth = getWidth();
+				int componentHeight = getHeight();
+				int textWidth;
+				int textHeight;
+				int originX;
+				int originY = 0;
+				Graphics2D graphics2d = (Graphics2D) g;
+				graphics2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+						RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+				graphics2d.setBackground(displayColor);
+				graphics2d.clearRect(0, 0, componentWidth, componentHeight);
+				graphics2d.setFont(DEFAULT_FONT);
+				FontMetrics fontMetrics = graphics2d.getFontMetrics();
+				synchronized (View.this) {
+					for (String line : text) {
+						Rectangle2D rectangle2D = fontMetrics.getStringBounds(line, graphics2d);
+						textWidth = (int) rectangle2D.getWidth();
+						textHeight = (int) rectangle2D.getHeight();
+						originX = (componentWidth - textWidth) / 2; // Center the text.
+						graphics2d.setColor(Color.BLACK);
+						graphics2d.fillRect(originX, originY, textWidth, textHeight);
+						graphics2d.setColor(Color.WHITE);
+						graphics2d.drawString(line, originX, originY + fontMetrics.getAscent());
+						originY += textHeight;
+					}
+				}
+			}
+		};
+	};
 
 	public View() {
 		encodingComboBox.setSelectedItem(Charset.defaultCharset().name());
@@ -94,7 +143,7 @@ public class View implements Observer {
 
 		previewPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(0, 5, 0, 0),
 				BorderFactory.createEtchedBorder(EtchedBorder.LOWERED)));
-		previewPanel.add(encodingComboBox, BorderLayout.PAGE_START);
+		previewPanel.add(encodingComboBox, BorderLayout.NORTH);
 		previewPanel.add(contentTextArea, BorderLayout.CENTER);
 
 		fileChooser.setAccessory(previewPanel);
@@ -110,11 +159,8 @@ public class View implements Observer {
 			}
 		});
 
-		textPane.setEditable(false);
-		textPane.setFocusable(false);
-		textPane.setPreferredSize(new Dimension(1500, 120));
-		textPane.setBackground(Color.BLACK);
-		textPane.addMouseListener(new MouseAdapter() {
+		displayPanel.setFocusable(false);
+		displayPanel.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				mouseCurrentX = e.getXOnScreen();
@@ -128,7 +174,7 @@ public class View implements Observer {
 				}
 			}
 		});
-		textPane.addMouseMotionListener(new MouseMotionAdapter() {
+		displayPanel.addMouseMotionListener(new MouseMotionAdapter() {
 			@Override
 			public void mouseDragged(MouseEvent e) {
 				frame.setLocation(e.getXOnScreen() - mouseCurrentX + frame.getX(),
@@ -137,8 +183,9 @@ public class View implements Observer {
 				mouseCurrentY = e.getYOnScreen();
 			}
 		});
-		textPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("H"), "ShowHideButtons");
-		textPane.getActionMap().put("ShowHideButtons", new AbstractAction() {
+		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("H"),
+				actionKey.ShowHideButtons);
+		displayPanel.getActionMap().put(actionKey.ShowHideButtons, new AbstractAction() {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -147,60 +194,54 @@ public class View implements Observer {
 			}
 		});
 
-		SimpleAttributeSet textStyle = new SimpleAttributeSet();
-		StyleConstants.setAlignment(textStyle, StyleConstants.ALIGN_CENTER);
-		StyleConstants.setForeground(textStyle, Color.WHITE);
-		StyleConstants.setFontFamily(textStyle, "sans-serif");
-		StyleConstants.setFontSize(textStyle, 40);
-		StyleConstants.setBold(textStyle, true);
-		StyledDocument textDoc = textPane.getStyledDocument();
-		textDoc.setParagraphAttributes(0, 0, textStyle, true);
-
-		Container pane = frame.getContentPane();
-		pane.setLayout(new GridBagLayout());
+		controlPanel.setFocusable(false);
 		GridBagConstraints constraints = new GridBagConstraints();
-		constraints.anchor = GridBagConstraints.LINE_START;
-		constraints.gridx = 0;
+		constraints.anchor = GridBagConstraints.WEST;
 		constraints.gridy = 0;
-		constraints.gridwidth = GridBagConstraints.REMAINDER;
-		pane.add(textPane, constraints);
-		constraints.gridx = 0;
-		constraints.gridy = 1;
 		constraints.gridwidth = 1;
 		constraints.insets = new Insets(10, 10, 10, 0);
-		pane.add(openButton, constraints);
+		constraints.gridx = 0;
+		controlPanel.add(openButton, constraints);
 		constraints.gridx = 1;
-		pane.add(playOrPauseButton, constraints);
+		controlPanel.add(playOrPauseButton, constraints);
 		constraints.gridx = 3;
-		pane.add(backwardButton, constraints);
+		controlPanel.add(backwardButton, constraints);
 		constraints.gridx = 5;
-		pane.add(previousButton, constraints);
+		controlPanel.add(previousButton, constraints);
 		constraints.gridx = 7;
-		pane.add(decreaseSpeedButton, constraints);
+		controlPanel.add(decreaseSpeedButton, constraints);
 		constraints.gridx = 9;
-		pane.add(exitButton, constraints);
-		constraints.gridx = 2;
+		controlPanel.add(exitButton, constraints);
 		constraints.insets = new Insets(10, 0, 10, 0);
-		pane.add(stopButton, constraints);
+		constraints.gridx = 2;
+		controlPanel.add(stopButton, constraints);
 		constraints.gridx = 4;
-		pane.add(forwardButton, constraints);
+		controlPanel.add(forwardButton, constraints);
 		constraints.gridx = 6;
-		pane.add(nextButton, constraints);
+		controlPanel.add(nextButton, constraints);
 		constraints.gridx = 8;
-		pane.add(increaseSpeedButton, constraints);
-		
-		for (Component component : frame.getContentPane().getComponents()) {
+		controlPanel.add(increaseSpeedButton, constraints);
+
+		for (Component component : controlPanel.getComponents()) {
 			if (component instanceof JButton) {
 				component.setFocusable(false);
 			}
 		}
 
+		Container contentPane = frame.getContentPane();
+		contentPane.add(displayPanel, BorderLayout.CENTER);
+		contentPane.add(controlPanel, BorderLayout.SOUTH);
+
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setAlwaysOnTop(true);
+		frame.setPreferredSize(new Dimension(1500, 200));
 		frame.setLocation(200, 900);
 		frame.setUndecorated(true);
+		frame.setBackground(NO_COLOR);
 		frame.pack();
 		frame.setVisible(true);
+		frame.createBufferStrategy(2);
+		bufferStrategy = frame.getBufferStrategy();
 	}
 
 	public void addController(Controller controller) {
@@ -217,34 +258,8 @@ public class View implements Observer {
 			}
 		};
 		openButton.addActionListener(openAction);
-		textPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("O"), "Open");
-		textPane.getActionMap().put("Open", openAction);
-
-		// Previous.
-		Action previousAction = new AbstractAction() {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				controller.previous();
-			}
-		};
-		previousButton.addActionListener(previousAction);
-		textPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("P"), "Previous");
-		textPane.getActionMap().put("Previous", previousAction);
-
-		// Backward.
-		Action backwardAction = new AbstractAction() {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				controller.backward();
-			}
-		};
-		backwardButton.addActionListener(backwardAction);
-		textPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("B"), "Backward");
-		textPane.getActionMap().put("Backward", backwardAction);
+		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("O"), actionKey.Open);
+		displayPanel.getActionMap().put(actionKey.Open, openAction);
 
 		// Play or pause.
 		Action playOrPauseAction = new AbstractAction() {
@@ -257,8 +272,9 @@ public class View implements Observer {
 			}
 		};
 		playOrPauseButton.addActionListener(playOrPauseAction);
-		textPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("SPACE"), "PlayOrPause");
-		textPane.getActionMap().put("PlayOrPause", playOrPauseAction);
+		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("SPACE"),
+				actionKey.PlayOrPause);
+		displayPanel.getActionMap().put(actionKey.PlayOrPause, playOrPauseAction);
 
 		// Stop.
 		Action stopAction = new AbstractAction() {
@@ -271,8 +287,22 @@ public class View implements Observer {
 			}
 		};
 		stopButton.addActionListener(stopAction);
-		textPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("S"), "Stop");
-		textPane.getActionMap().put("Stop", stopAction);
+		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("S"), actionKey.Stop);
+		displayPanel.getActionMap().put(actionKey.Stop, stopAction);
+
+		// Backward.
+		Action backwardAction = new AbstractAction() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				controller.backward();
+			}
+		};
+		backwardButton.addActionListener(backwardAction);
+		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("B"),
+				actionKey.Backward);
+		displayPanel.getActionMap().put(actionKey.Backward, backwardAction);
 
 		// Forward.
 		Action forwardAction = new AbstractAction() {
@@ -284,8 +314,22 @@ public class View implements Observer {
 			}
 		};
 		forwardButton.addActionListener(forwardAction);
-		textPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("F"), "Forward");
-		textPane.getActionMap().put("Forward", forwardAction);
+		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("F"), actionKey.Forward);
+		displayPanel.getActionMap().put(actionKey.Forward, forwardAction);
+
+		// Previous.
+		Action previousAction = new AbstractAction() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				controller.previous();
+			}
+		};
+		previousButton.addActionListener(previousAction);
+		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("P"),
+				actionKey.Previous);
+		displayPanel.getActionMap().put(actionKey.Previous, previousAction);
 
 		// Next.
 		Action nextAction = new AbstractAction() {
@@ -297,21 +341,8 @@ public class View implements Observer {
 			}
 		};
 		nextButton.addActionListener(nextAction);
-		textPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("N"), "Next");
-		textPane.getActionMap().put("Next", nextAction);
-
-		// Increase speed.
-		Action increaseSpeedAction = new AbstractAction() {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				controller.increaseSpeed();
-			}
-		};
-		increaseSpeedButton.addActionListener(increaseSpeedAction);
-		textPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("I"), "IncreaseSpeed");
-		textPane.getActionMap().put("IncreaseSpeed", increaseSpeedAction);
+		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("N"), actionKey.Next);
+		displayPanel.getActionMap().put(actionKey.Next, nextAction);
 
 		// Decrease speed.
 		Action decreaseSpeedAction = new AbstractAction() {
@@ -323,8 +354,23 @@ public class View implements Observer {
 			}
 		};
 		decreaseSpeedButton.addActionListener(decreaseSpeedAction);
-		textPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("D"), "DecreaseSpeed");
-		textPane.getActionMap().put("DecreaseSpeed", decreaseSpeedAction);
+		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("D"),
+				actionKey.DescreaseSpeed);
+		displayPanel.getActionMap().put(actionKey.DescreaseSpeed, decreaseSpeedAction);
+
+		// Increase speed.
+		Action increaseSpeedAction = new AbstractAction() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				controller.increaseSpeed();
+			}
+		};
+		increaseSpeedButton.addActionListener(increaseSpeedAction);
+		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("I"),
+				actionKey.IncreaseSpeed);
+		displayPanel.getActionMap().put(actionKey.IncreaseSpeed, increaseSpeedAction);
 
 		// Exit.
 		Action exitAction = new AbstractAction() {
@@ -336,8 +382,9 @@ public class View implements Observer {
 			}
 		};
 		exitButton.addActionListener(exitAction);
-		textPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ESCAPE"), "Exit");
-		textPane.getActionMap().put("Exit", exitAction);
+		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ESCAPE"),
+				actionKey.Exit);
+		displayPanel.getActionMap().put(actionKey.Exit, exitAction);
 	}
 
 	private void changePlayState(boolean newPlayState) {
@@ -347,19 +394,17 @@ public class View implements Observer {
 
 	private void showHideButtons() {
 		isButtonVisible = !isButtonVisible;
-		for (Component component : frame.getContentPane().getComponents()) {
-			if (component instanceof JButton) {
-				component.setVisible(isButtonVisible);
-			}
-		}
-		frame.pack();
+		frame.setVisible(false);
+		displayColor = isButtonVisible ? Color.BLACK : NO_COLOR;
+		controlPanel.setVisible(isButtonVisible);
+		frame.setVisible(true);
 	}
 
 	private void updatePreview() {
 		File file = fileChooser.getSelectedFile();
 		if (file != null) {
 			try {
-				eventList = AdaptvieParser.getEventList(file.getAbsolutePath(),
+				eventList = AdaptiveParser.getEventList(file.getAbsolutePath(),
 						encodingComboBox.getSelectedItem().toString());
 				String sample = eventList.stream().filter(t -> t.type == Event.Type.Start).limit(10).map(t -> t.text)
 						.collect(Collectors.joining(System.lineSeparator()));
@@ -367,20 +412,31 @@ public class View implements Observer {
 			} catch (IOException e) {
 				contentTextArea.setText("Cannot open the selected file with the specified encoding.");
 			}
-
 		}
 	}
 
 	@Override
 	public void update(Observable model, Object arg) {
 		if (arg instanceof List<?>) {
-			List<?> visibleSubtitleList = (List<?>) arg;
-			text = visibleSubtitleList.stream().map(o -> o.toString())
-					.collect(Collectors.joining(System.lineSeparator()));
+			synchronized (View.this) {
+				text.clear();
+				for (Object object : (List<?>) arg) {
+					if (object instanceof String) {
+						text.addAll(Arrays.asList(((String) object).split(System.lineSeparator())));
+					}
+				}
+			}
 			SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
-					textPane.setText(text);
+					do {
+						do {
+							Graphics graphics = bufferStrategy.getDrawGraphics();
+							frame.update(graphics);
+							graphics.dispose();
+						} while (bufferStrategy.contentsRestored());
+						bufferStrategy.show();
+					} while (bufferStrategy.contentsLost());
 				}
 			});
 		}

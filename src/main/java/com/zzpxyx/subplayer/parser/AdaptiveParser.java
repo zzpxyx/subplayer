@@ -6,7 +6,7 @@ import java.util.List;
 
 import com.zzpxyx.subplayer.event.Event;
 
-public class AdaptvieParser {
+public class AdaptiveParser {
 	public static List<Event> getEventList(String fileName, String encodingName) throws IOException {
 		String fileExtName = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
 		switch (fileExtName) {
