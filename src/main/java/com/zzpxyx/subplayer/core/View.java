@@ -30,6 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Properties;
 import java.util.stream.Collectors;
 
 import javax.swing.AbstractAction;
@@ -47,6 +48,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import com.zzpxyx.subplayer.config.Config;
 import com.zzpxyx.subplayer.event.Event;
 import com.zzpxyx.subplayer.parser.AdaptiveParser;
 
@@ -131,7 +133,7 @@ public class View implements Observer {
 		};
 	};
 
-	public View() {
+	public View(Properties config) {
 		encodingComboBox.setSelectedItem(Charset.defaultCharset().name());
 		encodingComboBox.addActionListener(new ActionListener() {
 			@Override
@@ -234,8 +236,10 @@ public class View implements Observer {
 
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setAlwaysOnTop(true);
-		frame.setPreferredSize(new Dimension(1500, 200));
-		frame.setLocation(200, 900);
+		frame.setPreferredSize(new Dimension(Integer.parseInt(config.getProperty(Config.WINDOW_WIDTH)),
+				Integer.parseInt(config.getProperty(Config.WINDOW_HEIGHT))));
+		frame.setLocation(Integer.parseInt(config.getProperty(Config.WINDOW_X_POSITION)),
+				Integer.parseInt(config.getProperty(Config.WINDOW_Y_POSITION)));
 		frame.setUndecorated(true);
 		frame.setBackground(NO_COLOR);
 		frame.pack();

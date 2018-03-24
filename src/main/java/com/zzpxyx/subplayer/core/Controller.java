@@ -12,6 +12,7 @@ public class Controller {
 		this.model = model;
 		this.view = view;
 		this.model.addObserver(this.view);
+		this.view.addController(this);
 	}
 
 	public void playOrPause(boolean isPlaying) {
