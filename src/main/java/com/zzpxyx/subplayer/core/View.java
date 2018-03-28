@@ -68,8 +68,12 @@ public class View implements Observer {
 	private static final Color NO_COLOR = new Color(0, 0, 0, 0);
 	private static final Font DEFAULT_FONT = new Font("sans-serif", Font.BOLD, 40);
 
-	private static enum actionKey {
+	private static enum ActionKey {
 		Open, PlayOrPause, Stop, Backward, Forward, Previous, Next, DescreaseSpeed, IncreaseSpeed, Exit, ShowHideButtons
+	}
+
+	private static enum RenderMethod {
+		Basic, Advanced
 	}
 
 	private int mouseCurrentX;
@@ -79,6 +83,7 @@ public class View implements Observer {
 	private List<String> text = new LinkedList<String>();
 	private List<Event> eventList;
 	private BufferStrategy bufferStrategy;
+	private RenderMethod renderMethod;
 	private Color displayColor = Color.BLACK;
 	private JFrame frame = new JFrame("SubPlayer");
 	private JFileChooser fileChooser = new JFileChooser();
@@ -134,6 +139,12 @@ public class View implements Observer {
 	};
 
 	public View(Properties config) {
+		if (System.getProperty("os.name").toLowerCase().startsWith("linux")) {
+			renderMethod = RenderMethod.Advanced;
+		} else {
+			renderMethod = RenderMethod.Basic;
+		}
+
 		encodingComboBox.setSelectedItem(Charset.defaultCharset().name());
 		encodingComboBox.addActionListener(new ActionListener() {
 			@Override
@@ -186,8 +197,8 @@ public class View implements Observer {
 			}
 		});
 		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("H"),
-				actionKey.ShowHideButtons);
-		displayPanel.getActionMap().put(actionKey.ShowHideButtons, new AbstractAction() {
+				ActionKey.ShowHideButtons);
+		displayPanel.getActionMap().put(ActionKey.ShowHideButtons, new AbstractAction() {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -262,8 +273,8 @@ public class View implements Observer {
 			}
 		};
 		openButton.addActionListener(openAction);
-		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("O"), actionKey.Open);
-		displayPanel.getActionMap().put(actionKey.Open, openAction);
+		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("O"), ActionKey.Open);
+		displayPanel.getActionMap().put(ActionKey.Open, openAction);
 
 		// Play or pause.
 		Action playOrPauseAction = new AbstractAction() {
@@ -277,8 +288,8 @@ public class View implements Observer {
 		};
 		playOrPauseButton.addActionListener(playOrPauseAction);
 		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("SPACE"),
-				actionKey.PlayOrPause);
-		displayPanel.getActionMap().put(actionKey.PlayOrPause, playOrPauseAction);
+				ActionKey.PlayOrPause);
+		displayPanel.getActionMap().put(ActionKey.PlayOrPause, playOrPauseAction);
 
 		// Stop.
 		Action stopAction = new AbstractAction() {
@@ -291,8 +302,8 @@ public class View implements Observer {
 			}
 		};
 		stopButton.addActionListener(stopAction);
-		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("S"), actionKey.Stop);
-		displayPanel.getActionMap().put(actionKey.Stop, stopAction);
+		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("S"), ActionKey.Stop);
+		displayPanel.getActionMap().put(ActionKey.Stop, stopAction);
 
 		// Backward.
 		Action backwardAction = new AbstractAction() {
@@ -305,8 +316,8 @@ public class View implements Observer {
 		};
 		backwardButton.addActionListener(backwardAction);
 		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("B"),
-				actionKey.Backward);
-		displayPanel.getActionMap().put(actionKey.Backward, backwardAction);
+				ActionKey.Backward);
+		displayPanel.getActionMap().put(ActionKey.Backward, backwardAction);
 
 		// Forward.
 		Action forwardAction = new AbstractAction() {
@@ -318,8 +329,8 @@ public class View implements Observer {
 			}
 		};
 		forwardButton.addActionListener(forwardAction);
-		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("F"), actionKey.Forward);
-		displayPanel.getActionMap().put(actionKey.Forward, forwardAction);
+		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("F"), ActionKey.Forward);
+		displayPanel.getActionMap().put(ActionKey.Forward, forwardAction);
 
 		// Previous.
 		Action previousAction = new AbstractAction() {
@@ -332,8 +343,8 @@ public class View implements Observer {
 		};
 		previousButton.addActionListener(previousAction);
 		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("P"),
-				actionKey.Previous);
-		displayPanel.getActionMap().put(actionKey.Previous, previousAction);
+				ActionKey.Previous);
+		displayPanel.getActionMap().put(ActionKey.Previous, previousAction);
 
 		// Next.
 		Action nextAction = new AbstractAction() {
@@ -345,8 +356,8 @@ public class View implements Observer {
 			}
 		};
 		nextButton.addActionListener(nextAction);
-		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("N"), actionKey.Next);
-		displayPanel.getActionMap().put(actionKey.Next, nextAction);
+		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("N"), ActionKey.Next);
+		displayPanel.getActionMap().put(ActionKey.Next, nextAction);
 
 		// Decrease speed.
 		Action decreaseSpeedAction = new AbstractAction() {
@@ -359,8 +370,8 @@ public class View implements Observer {
 		};
 		decreaseSpeedButton.addActionListener(decreaseSpeedAction);
 		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("D"),
-				actionKey.DescreaseSpeed);
-		displayPanel.getActionMap().put(actionKey.DescreaseSpeed, decreaseSpeedAction);
+				ActionKey.DescreaseSpeed);
+		displayPanel.getActionMap().put(ActionKey.DescreaseSpeed, decreaseSpeedAction);
 
 		// Increase speed.
 		Action increaseSpeedAction = new AbstractAction() {
@@ -373,8 +384,8 @@ public class View implements Observer {
 		};
 		increaseSpeedButton.addActionListener(increaseSpeedAction);
 		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("I"),
-				actionKey.IncreaseSpeed);
-		displayPanel.getActionMap().put(actionKey.IncreaseSpeed, increaseSpeedAction);
+				ActionKey.IncreaseSpeed);
+		displayPanel.getActionMap().put(ActionKey.IncreaseSpeed, increaseSpeedAction);
 
 		// Exit.
 		Action exitAction = new AbstractAction() {
@@ -387,8 +398,8 @@ public class View implements Observer {
 		};
 		exitButton.addActionListener(exitAction);
 		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ESCAPE"),
-				actionKey.Exit);
-		displayPanel.getActionMap().put(actionKey.Exit, exitAction);
+				ActionKey.Exit);
+		displayPanel.getActionMap().put(ActionKey.Exit, exitAction);
 	}
 
 	private void changePlayState(boolean newPlayState) {
@@ -433,14 +444,21 @@ public class View implements Observer {
 			SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
-					do {
+					switch (renderMethod) {
+					case Basic:
+						frame.repaint();
+						break;
+					case Advanced:
 						do {
-							Graphics graphics = bufferStrategy.getDrawGraphics();
-							frame.update(graphics);
-							graphics.dispose();
-						} while (bufferStrategy.contentsRestored());
-						bufferStrategy.show();
-					} while (bufferStrategy.contentsLost());
+							do {
+								Graphics graphics = bufferStrategy.getDrawGraphics();
+								frame.update(graphics);
+								graphics.dispose();
+							} while (bufferStrategy.contentsRestored());
+							bufferStrategy.show();
+						} while (bufferStrategy.contentsLost());
+						break;
+					}
 				}
 			});
 		}
