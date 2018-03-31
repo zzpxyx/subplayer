@@ -66,7 +66,7 @@ public class View implements Observer {
 	private static final String EXIT_EMOJI = String.valueOf(Character.toChars(0x274C));
 
 	private static final Color NO_COLOR = new Color(0, 0, 0, 0);
-	private static final Font DEFAULT_FONT = new Font("sans-serif", Font.BOLD, 40);
+	private final Font DEFAULT_FONT;
 
 	private static enum ActionKey {
 		Open, PlayOrPause, Stop, Backward, Forward, Previous, Next, DescreaseSpeed, IncreaseSpeed, Exit, ShowHideButtons
@@ -139,6 +139,8 @@ public class View implements Observer {
 	};
 
 	public View(Properties config) {
+		DEFAULT_FONT = new Font("sans-serif", Font.BOLD, Integer.parseInt(config.getProperty(Config.FONT_SIZE)));
+
 		if (System.getProperty("os.name").toLowerCase().startsWith("linux")) {
 			renderMethod = RenderMethod.Advanced;
 		} else {
