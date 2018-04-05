@@ -53,17 +53,17 @@ import com.zzpxyx.subplayer.event.Event;
 import com.zzpxyx.subplayer.parser.AdaptiveParser;
 
 public class View implements Observer {
-	private static final String OPEN_EMOJI = String.valueOf(Character.toChars(0x1F5C1));
-	private static final String PREVIOUS_EMOJI = String.valueOf(Character.toChars(0x23EE));
-	private static final String BACKWARD_EMOJI = String.valueOf(Character.toChars(0x23EA));
-	private static final String PLAY_EMOJI = String.valueOf(Character.toChars(0x25B6));
-	private static final String PAUSE_EMOJI = String.valueOf(Character.toChars(0x23F8));
-	private static final String STOP_EMOJI = String.valueOf(Character.toChars(0x23F9));
-	private static final String FORWARD_EMOJI = String.valueOf(Character.toChars(0x23E9));
-	private static final String NEXT_EMOJI = String.valueOf(Character.toChars(0x23ED));
-	private static final String INCREASE_SPEED_EMOJI = String.valueOf(Character.toChars(0x2795));
-	private static final String DECREASE_SPEED_EMOJI = String.valueOf(Character.toChars(0x2796));
-	private static final String EXIT_EMOJI = String.valueOf(Character.toChars(0x274C));
+	private static final String OPEN_EMOJI = "\uD83D\uDDC1\uFE0F";
+	private static final String PREVIOUS_EMOJI = "\u23EE\uFE0F";
+	private static final String BACKWARD_EMOJI = "\u23EA\uFE0F";
+	private static final String PLAY_EMOJI = "\u25B6\uFE0F";
+	private static final String PAUSE_EMOJI = "\u23F8\uFE0F";
+	private static final String STOP_EMOJI = "\u23F9\uFE0F";
+	private static final String FORWARD_EMOJI = "\u23E9\uFE0F";
+	private static final String NEXT_EMOJI = "\u23ED\uFE0F";
+	private static final String INCREASE_SPEED_EMOJI = "\u2795\uFE0F";
+	private static final String DECREASE_SPEED_EMOJI = "\u2796\uFE0F";
+	private static final String EXIT_EMOJI = "\u274C\uFE0F";
 
 	private static final Color NO_COLOR = new Color(0, 0, 0, 0);
 	private final Font DEFAULT_FONT;
