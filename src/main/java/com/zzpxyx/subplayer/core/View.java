@@ -247,6 +247,7 @@ public class View implements Observer {
 		contentPane.add(displayPanel, BorderLayout.CENTER);
 		contentPane.add(controlPanel, BorderLayout.SOUTH);
 
+		frame.getRootPane().putClientProperty("Window.shadow", false); // Remove window shadow, especially for macOS.
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setAlwaysOnTop(true);
 		frame.setPreferredSize(new Dimension(Integer.parseInt(config.getProperty(Config.WINDOW_WIDTH)),
