@@ -8,7 +8,7 @@ A simple subtitle player.
 This application is under heavy development. Currently, it is only a working prototype with many limitations such as:
 
 - Rudimentary user interface.
-- No user settings.
+- Limited user settings.
 
 ## Build
 The [project's release page on GitHub](https://github.com/zzpxyx/subplayer/releases) has pre-built packages.
@@ -23,8 +23,10 @@ mvn package
 Running requires JRE 1.8:
 
 ``` bash
-java -jar <path_to_subplayer_jar_file>
+java -jar path/to/subplayer/file.jar
 ```
+
+Depending on your system, you may be able to double click on the jar file and launch the application immediately.
 
 ## Usage
 From left to right, the buttons on the user interface are:
@@ -40,9 +42,24 @@ From left to right, the buttons on the user interface are:
 - Increase speed: increase the playing speed by 2%. Shortcut key "I".
 - Exit: exit the application. Shortcut key "ESC".
 
-Double clicking on the black displaying area will hide and show the buttons. Shortcut key "H".
+Double clicking on the black displaying area will make the window transparent. Double click again to restore. Shortcut key "H".
 
-Mouse dragging the black displaying area will move the entire application window. 
+Mouse dragging the black displaying area will move the entire application window.
+
+## Settings
+A limited set of user settings are supported. All user settings should be in the form of `key=value` and put into a file with the name `config.properties` in the same folder as the application's jar file.
+
+Available user setting keys:
+
+- `WindowWidth`: width of the application window. Default to 80% of the screen width.
+- `WindowHeight`: height of the application window. Default to 150 pixels.
+- `WindowXPosition`: horizontal position of the application window. Default to 10% of the screen width.
+- `WindowYPosition`: vertical position of the application window. Default to screen height minus 150 pixels.
+- `FontSize`: subtitle font size. Default to 40 point.
+
+All numerical values should be set without units like "px" or "pt".
+
+Note that the default values will make the application window centered at the bottom of the screen.
 
 ## LICENSE
 See file LICENSE.
