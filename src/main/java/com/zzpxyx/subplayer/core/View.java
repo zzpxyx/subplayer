@@ -66,6 +66,8 @@ public class View implements Observer {
 	private static final String DECREASE_SPEED_EMOJI = "\u2796\uFE0F";
 	private static final String EXIT_EMOJI = "\u274C\uFE0F";
 
+	private static final int SEEKBAR_MAX = 10000;
+
 	private static final Color NO_COLOR = new Color(0, 0, 0, 0);
 	private final Font DEFAULT_FONT;
 
@@ -79,6 +81,7 @@ public class View implements Observer {
 
 	private int mouseCurrentX;
 	private int mouseCurrentY;
+	private long totalPlayTime;
 	private boolean isPlaying = false;
 	private boolean isButtonVisible = true;
 	private List<String> text = new LinkedList<String>();
@@ -279,7 +282,8 @@ public class View implements Observer {
 			public void actionPerformed(ActionEvent e) {
 				if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
 					controller.setEventList(eventList);
-					seekBar.setMaximum((int) eventList.get(eventList.size() - 1).time);
+					totalPlayTime = eventList.get(eventList.size() - 1).time;
+					seekBar.setMaximum(SEEKBAR_MAX);
 					changePlayState(false);
 				}
 			}
@@ -467,7 +471,7 @@ public class View implements Observer {
 						} while (bufferStrategy.contentsLost());
 						break;
 					}
-					seekBar.setValue((int) update.time);
+					seekBar.setValue((int) (update.time * SEEKBAR_MAX / totalPlayTime));
 				}
 			});
 		}
