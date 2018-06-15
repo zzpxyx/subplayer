@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 
 import com.zzpxyx.subplayer.event.Event;
+import com.zzpxyx.subplayer.event.Update;
 import com.zzpxyx.subplayer.parser.SrtParser;
 
 class ModelTest implements Observer {
@@ -146,10 +147,9 @@ class ModelTest implements Observer {
 
 	@Override
 	public void update(Observable model, Object arg) {
-		if (arg instanceof List<?>) {
+		if (arg instanceof Update) {
 			long time = System.currentTimeMillis() - startTimestamp;
-			List<?> visibleSubtitleList = (List<?>) arg;
-			String text = visibleSubtitleList.stream().map(o -> o.toString()).collect(Collectors.joining("|"));
+			String text = String.join("|", ((Update) arg).text);
 			actualList.add(new Event(Event.Type.Dummy, time, text));
 			latch.countDown();
 		}

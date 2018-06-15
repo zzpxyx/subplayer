@@ -25,7 +25,6 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Observable;
@@ -42,6 +41,7 @@ import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
@@ -50,6 +50,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import com.zzpxyx.subplayer.config.Config;
 import com.zzpxyx.subplayer.event.Event;
+import com.zzpxyx.subplayer.event.Update;
 import com.zzpxyx.subplayer.parser.AdaptiveParser;
 
 public class View implements Observer {
@@ -137,6 +138,7 @@ public class View implements Observer {
 			}
 		};
 	};
+	private JProgressBar seekBar = new JProgressBar();
 
 	public View(Properties config) {
 		DEFAULT_FONT = new Font("sans-serif", Font.BOLD, Integer.parseInt(config.getProperty(Config.FONT_SIZE)));
@@ -236,6 +238,12 @@ public class View implements Observer {
 		controlPanel.add(nextButton, constraints);
 		constraints.gridx = 8;
 		controlPanel.add(increaseSpeedButton, constraints);
+		constraints.insets = new Insets(10, 10, 10, 10);
+		constraints.gridx = 10;
+		constraints.gridwidth = GridBagConstraints.REMAINDER;
+		constraints.fill = GridBagConstraints.BOTH;
+		constraints.weightx = 1;
+		controlPanel.add(seekBar, constraints);
 
 		for (Component component : controlPanel.getComponents()) {
 			if (component instanceof JButton) {
@@ -271,6 +279,7 @@ public class View implements Observer {
 			public void actionPerformed(ActionEvent e) {
 				if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
 					controller.setEventList(eventList);
+					seekBar.setMaximum((int) eventList.get(eventList.size() - 1).time);
 					changePlayState(false);
 				}
 			}
@@ -435,14 +444,10 @@ public class View implements Observer {
 
 	@Override
 	public void update(Observable model, Object arg) {
-		if (arg instanceof List<?>) {
+		if (arg instanceof Update) {
+			Update update = (Update) arg;
 			synchronized (View.this) {
-				text.clear();
-				for (Object object : (List<?>) arg) {
-					if (object instanceof String) {
-						text.addAll(Arrays.asList(((String) object).split(System.lineSeparator())));
-					}
-				}
+				text = update.text;
 			}
 			SwingUtilities.invokeLater(new Runnable() {
 				@Override
@@ -462,6 +467,7 @@ public class View implements Observer {
 						} while (bufferStrategy.contentsLost());
 						break;
 					}
+					seekBar.setValue((int) update.time);
 				}
 			});
 		}

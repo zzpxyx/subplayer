@@ -1,5 +1,6 @@
 package com.zzpxyx.subplayer.core;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Observable;
@@ -7,10 +8,12 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import com.zzpxyx.subplayer.event.Event;
+import com.zzpxyx.subplayer.event.Update;
 
 public class Model extends Observable {
 	private List<Event> eventList = new LinkedList<>(); // List has a dummy head.
-	private List<String> visibleSubtitleList = new LinkedList<>();
+	// private List<String> visibleSubtitleList = new LinkedList<>();
+	private Update update = new Update();
 	private Timer scheduler = new Timer();
 	private boolean isPlaying = false;
 	private int currentEventIndex = 0;
@@ -109,13 +112,14 @@ public class Model extends Observable {
 
 			// Update displaying subtitles.
 			Event currentEvent = eventList.get(currentEventIndex);
-			visibleSubtitleList.clear();
+			update.text.clear();
 			if (currentEvent.type == Event.Type.Start) {
 				// Only show subtitle if jumping to a start event.
-				visibleSubtitleList.add(currentEvent.text);
+				update.text.addAll(Arrays.asList(currentEvent.text.split(System.lineSeparator())));
 			}
+			update.time = currentEvent.time;
 			setChanged();
-			notifyObservers(visibleSubtitleList);
+			notifyObservers(update);
 		});
 	}
 
@@ -164,14 +168,15 @@ public class Model extends Observable {
 				case Dummy:
 					break;
 				case Start:
-					visibleSubtitleList.add(currentEvent.text);
+					update.text.addAll(Arrays.asList(currentEvent.text.split(System.lineSeparator())));
 					break;
 				case End:
-					visibleSubtitleList.remove(currentEvent.text);
+					update.text.removeAll(Arrays.asList(currentEvent.text.split(System.lineSeparator())));
 					break;
 				}
+				update.time = currentEvent.time;
 				setChanged();
-				notifyObservers(visibleSubtitleList);
+				notifyObservers(update);
 			}
 		}
 	}
