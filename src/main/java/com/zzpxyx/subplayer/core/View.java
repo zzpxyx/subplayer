@@ -40,6 +40,7 @@ import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JTextArea;
@@ -142,6 +143,8 @@ public class View implements Observer {
 		};
 	};
 	private JProgressBar seekBar = new JProgressBar();
+	private JLabel currentTimeLabel = new JLabel("0:00:00");
+	private JLabel totalTimeLabel = new JLabel("0:00:00");
 
 	public View(Properties config) {
 		DEFAULT_FONT = new Font("sans-serif", Font.BOLD, Integer.parseInt(config.getProperty(Config.FONT_SIZE)));
@@ -234,7 +237,14 @@ public class View implements Observer {
 		controlPanel.add(decreaseSpeedButton, constraints);
 		constraints.gridx = 9;
 		controlPanel.add(exitButton, constraints);
+		constraints.gridx = 10;
+		controlPanel.add(currentTimeLabel, constraints);
+		constraints.gridx = 11;
+		constraints.fill = GridBagConstraints.BOTH;
+		constraints.weightx = 1;
+		controlPanel.add(seekBar, constraints);
 		constraints.insets = new Insets(10, 0, 10, 0);
+		constraints.weightx = 0;
 		constraints.gridx = 2;
 		controlPanel.add(stopButton, constraints);
 		constraints.gridx = 4;
@@ -244,11 +254,8 @@ public class View implements Observer {
 		constraints.gridx = 8;
 		controlPanel.add(increaseSpeedButton, constraints);
 		constraints.insets = new Insets(10, 10, 10, 10);
-		constraints.gridx = 10;
-		constraints.gridwidth = GridBagConstraints.REMAINDER;
-		constraints.fill = GridBagConstraints.BOTH;
-		constraints.weightx = 1;
-		controlPanel.add(seekBar, constraints);
+		constraints.gridx = 12;
+		controlPanel.add(totalTimeLabel, constraints);
 
 		for (Component component : controlPanel.getComponents()) {
 			if (component instanceof JButton) {
@@ -285,6 +292,7 @@ public class View implements Observer {
 				if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
 					controller.setEventList(eventList);
 					totalPlayTime = eventList.get(eventList.size() - 1).time;
+					totalTimeLabel.setText(formatDuration(totalPlayTime));
 					changePlayState(false);
 				}
 			}
@@ -456,6 +464,11 @@ public class View implements Observer {
 		}
 	}
 
+	private String formatDuration(long millis) {
+		millis /= 1000;
+		return String.format("%d:%02d:%02d", millis / 3600, (millis % 3600) / 60, millis % 60);
+	}
+
 	@Override
 	public void update(Observable model, Object arg) {
 		if (arg instanceof Update) {
@@ -482,6 +495,7 @@ public class View implements Observer {
 						break;
 					}
 					seekBar.setValue((int) (update.time * SEEKBAR_MAX / totalPlayTime));
+					currentTimeLabel.setText(formatDuration(update.time));
 				}
 			});
 		}
