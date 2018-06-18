@@ -214,6 +214,8 @@ public class View implements Observer {
 			}
 		});
 
+		seekBar.setMaximum(SEEKBAR_MAX);
+
 		controlPanel.setFocusable(false);
 		GridBagConstraints constraints = new GridBagConstraints();
 		constraints.anchor = GridBagConstraints.WEST;
@@ -283,7 +285,6 @@ public class View implements Observer {
 				if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
 					controller.setEventList(eventList);
 					totalPlayTime = eventList.get(eventList.size() - 1).time;
-					seekBar.setMaximum(SEEKBAR_MAX);
 					changePlayState(false);
 				}
 			}
@@ -416,6 +417,15 @@ public class View implements Observer {
 		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ESCAPE"),
 				ActionKey.Exit);
 		displayPanel.getActionMap().put(ActionKey.Exit, exitAction);
+
+		// Seek bar.
+		seekBar.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				seekBar.setValue(e.getX() * SEEKBAR_MAX / seekBar.getWidth());
+				// TODO: binary search for the event index.
+			}
+		});
 	}
 
 	private void changePlayState(boolean newPlayState) {

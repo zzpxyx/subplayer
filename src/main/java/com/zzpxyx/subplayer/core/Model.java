@@ -103,7 +103,7 @@ public class Model extends Observable {
 		});
 	}
 
-	private synchronized void jumpToEvent(int newEventIndex) {
+	public synchronized void jumpToEvent(int newEventIndex) {
 		pauseRunResume(() -> {
 			// Adjust start point.
 			currentEventIndex = newEventIndex;

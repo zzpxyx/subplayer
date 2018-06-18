@@ -15,6 +15,10 @@ public class Controller {
 		this.view.addController(this);
 	}
 
+	public void setEventList(List<Event> eventList) {
+		model.setEventList(eventList);
+	}
+
 	public void playOrPause(boolean isPlaying) {
 		if (isPlaying) {
 			model.play();
@@ -23,35 +27,35 @@ public class Controller {
 		}
 	}
 
-	public void next() {
-		model.next();
-	}
-
-	public void previous() {
-		model.previous();
-	}
-
 	public void stop() {
 		model.stop();
-	}
-
-	public void setEventList(List<Event> eventList) {
-		model.setEventList(eventList);
-	}
-
-	public void forward() {
-		model.adjustOffset(-50);
 	}
 
 	public void backward() {
 		model.adjustOffset(50);
 	}
 
-	public void increaseSpeed() {
-		model.adjustSpeed(-0.02);
+	public void forward() {
+		model.adjustOffset(-50);
+	}
+
+	public void previous() {
+		model.previous();
+	}
+
+	public void next() {
+		model.next();
 	}
 
 	public void decreaseSpeed() {
 		model.adjustSpeed(0.02);
+	}
+
+	public void increaseSpeed() {
+		model.adjustSpeed(-0.02);
+	}
+
+	public void jumpToEvent(int newEventIndex) {
+		model.jumpToEvent(newEventIndex);
 	}
 }
