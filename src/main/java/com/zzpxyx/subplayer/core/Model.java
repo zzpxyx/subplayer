@@ -1,7 +1,8 @@
 package com.zzpxyx.subplayer.core;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Observable;
 import java.util.Timer;
@@ -11,8 +12,7 @@ import com.zzpxyx.subplayer.event.Event;
 import com.zzpxyx.subplayer.event.Update;
 
 public class Model extends Observable {
-	private List<Event> eventList = new LinkedList<>(); // List has a dummy head.
-	// private List<String> visibleSubtitleList = new LinkedList<>();
+	private List<Event> eventList = new ArrayList<>(); // List has a dummy head.
 	private Update update = new Update();
 	private Timer scheduler = new Timer();
 	private boolean isPlaying = false;
@@ -121,6 +121,15 @@ public class Model extends Observable {
 			setChanged();
 			notifyObservers(update);
 		});
+	}
+
+	public synchronized void jumpToTime(long eventTime) {
+		int eventIndex = Collections.binarySearch(eventList, new Event(Event.Type.Dummy, eventTime, ""));
+		if (eventIndex < 0) {
+			// Exact event not found. An "insertion point" is returned.
+			eventIndex = -eventIndex - 2; // Index of the previous event of the target time.
+		}
+		jumpToEvent(eventIndex);
 	}
 
 	private synchronized void pauseRunResume(Runnable runnable) {

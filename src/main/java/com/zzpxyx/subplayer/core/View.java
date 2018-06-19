@@ -431,7 +431,7 @@ public class View implements Observer {
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				seekBar.setValue(e.getX() * SEEKBAR_MAX / seekBar.getWidth());
-				// TODO: binary search for the event index.
+				controller.jumpToTime(e.getX() * totalPlayTime / seekBar.getWidth());
 			}
 		});
 	}

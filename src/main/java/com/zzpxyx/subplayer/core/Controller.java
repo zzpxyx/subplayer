@@ -58,4 +58,8 @@ public class Controller {
 	public void jumpToEvent(int newEventIndex) {
 		model.jumpToEvent(newEventIndex);
 	}
+
+	public void jumpToTime(long eventTime) {
+		model.jumpToTime(eventTime);
+	}
 }
