@@ -83,6 +83,7 @@ public class View implements Observer {
 	private int mouseCurrentX;
 	private int mouseCurrentY;
 	private long totalPlayTime;
+	private double playSpeed = 1;
 	private boolean isPlaying = false;
 	private boolean isButtonVisible = true;
 	private List<String> text = new LinkedList<String>();
@@ -145,6 +146,7 @@ public class View implements Observer {
 	private JProgressBar seekBar = new JProgressBar();
 	private JLabel currentTimeLabel = new JLabel("0:00:00");
 	private JLabel totalTimeLabel = new JLabel("0:00:00");
+	private JLabel playSpeedLabel = new JLabel("1.00");
 
 	public View(Properties config) {
 		DEFAULT_FONT = new Font("sans-serif", Font.BOLD, Integer.parseInt(config.getProperty(Config.FONT_SIZE)));
@@ -235,11 +237,11 @@ public class View implements Observer {
 		controlPanel.add(previousButton, constraints);
 		constraints.gridx = 7;
 		controlPanel.add(decreaseSpeedButton, constraints);
-		constraints.gridx = 9;
-		controlPanel.add(exitButton, constraints);
 		constraints.gridx = 10;
-		controlPanel.add(currentTimeLabel, constraints);
+		controlPanel.add(exitButton, constraints);
 		constraints.gridx = 11;
+		controlPanel.add(currentTimeLabel, constraints);
+		constraints.gridx = 12;
 		constraints.fill = GridBagConstraints.BOTH;
 		constraints.weightx = 1;
 		controlPanel.add(seekBar, constraints);
@@ -251,10 +253,12 @@ public class View implements Observer {
 		controlPanel.add(forwardButton, constraints);
 		constraints.gridx = 6;
 		controlPanel.add(nextButton, constraints);
-		constraints.gridx = 8;
+		constraints.gridx = 9;
 		controlPanel.add(increaseSpeedButton, constraints);
 		constraints.insets = new Insets(10, 10, 10, 10);
-		constraints.gridx = 12;
+		constraints.gridx = 8;
+		controlPanel.add(playSpeedLabel, constraints);
+		constraints.gridx = 13;
 		controlPanel.add(totalTimeLabel, constraints);
 
 		for (Component component : controlPanel.getComponents()) {
@@ -390,7 +394,11 @@ public class View implements Observer {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				controller.decreaseSpeed();
+				if (playSpeed > 0.02) {
+					playSpeed -= 0.02;
+					playSpeedLabel.setText(String.format("%.2f", playSpeed));
+					controller.decreaseSpeed();
+				}
 			}
 		};
 		decreaseSpeedButton.addActionListener(decreaseSpeedAction);
@@ -404,6 +412,8 @@ public class View implements Observer {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				playSpeed += 0.02;
+				playSpeedLabel.setText(String.format("%.2f", playSpeed));
 				controller.increaseSpeed();
 			}
 		};
