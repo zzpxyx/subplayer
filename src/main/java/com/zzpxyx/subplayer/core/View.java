@@ -43,8 +43,10 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.JSpinner;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -146,7 +148,7 @@ public class View implements Observer {
 	private JProgressBar seekBar = new JProgressBar();
 	private JLabel currentTimeLabel = new JLabel("0:00:00");
 	private JLabel totalTimeLabel = new JLabel("0:00:00");
-	private JLabel playSpeedLabel = new JLabel("1.00");
+	private JSpinner playSpeedSpinner = new JSpinner(new SpinnerNumberModel(1, 0.02, 2, 0.02));
 
 	public View(Properties config) {
 		DEFAULT_FONT = new Font("sans-serif", Font.BOLD, Integer.parseInt(config.getProperty(Config.FONT_SIZE)));
@@ -219,46 +221,45 @@ public class View implements Observer {
 			}
 		});
 
+		((JSpinner.DefaultEditor) playSpeedSpinner.getEditor()).getTextField().setEditable(false);
+
 		seekBar.setMaximum(SEEKBAR_MAX);
 
 		controlPanel.setFocusable(false);
 		GridBagConstraints constraints = new GridBagConstraints();
 		constraints.anchor = GridBagConstraints.WEST;
+		constraints.fill = GridBagConstraints.BOTH;
+		constraints.weightx = 0;
 		constraints.gridy = 0;
 		constraints.gridwidth = 1;
 		constraints.insets = new Insets(10, 10, 10, 0);
 		constraints.gridx = 0;
 		controlPanel.add(openButton, constraints);
-		constraints.gridx = 1;
+		constraints.gridx = 2;
 		controlPanel.add(playOrPauseButton, constraints);
-		constraints.gridx = 3;
+		constraints.gridx = 4;
 		controlPanel.add(backwardButton, constraints);
-		constraints.gridx = 5;
+		constraints.gridx = 6;
 		controlPanel.add(previousButton, constraints);
-		constraints.gridx = 7;
-		controlPanel.add(decreaseSpeedButton, constraints);
-		constraints.gridx = 10;
-		controlPanel.add(exitButton, constraints);
-		constraints.gridx = 11;
+		constraints.gridx = 8;
+		controlPanel.add(playSpeedSpinner, constraints);
+		constraints.gridx = 9;
 		controlPanel.add(currentTimeLabel, constraints);
-		constraints.gridx = 12;
-		constraints.fill = GridBagConstraints.BOTH;
+		constraints.gridx = 10;
 		constraints.weightx = 1;
 		controlPanel.add(seekBar, constraints);
 		constraints.insets = new Insets(10, 0, 10, 0);
 		constraints.weightx = 0;
-		constraints.gridx = 2;
+		constraints.gridx = 1;
+		controlPanel.add(exitButton, constraints);
+		constraints.gridx = 3;
 		controlPanel.add(stopButton, constraints);
-		constraints.gridx = 4;
+		constraints.gridx = 5;
 		controlPanel.add(forwardButton, constraints);
-		constraints.gridx = 6;
+		constraints.gridx = 7;
 		controlPanel.add(nextButton, constraints);
-		constraints.gridx = 9;
-		controlPanel.add(increaseSpeedButton, constraints);
 		constraints.insets = new Insets(10, 10, 10, 10);
-		constraints.gridx = 8;
-		controlPanel.add(playSpeedLabel, constraints);
-		constraints.gridx = 13;
+		constraints.gridx = 11;
 		controlPanel.add(totalTimeLabel, constraints);
 
 		for (Component component : controlPanel.getComponents()) {
@@ -396,7 +397,7 @@ public class View implements Observer {
 			public void actionPerformed(ActionEvent e) {
 				if (playSpeed > 0.02) {
 					playSpeed -= 0.02;
-					playSpeedLabel.setText(String.format("%.2f", playSpeed));
+					// playSpeedLabel.setText(String.format("%.2f", playSpeed));
 					controller.decreaseSpeed();
 				}
 			}
@@ -413,7 +414,7 @@ public class View implements Observer {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				playSpeed += 0.02;
-				playSpeedLabel.setText(String.format("%.2f", playSpeed));
+				// playSpeedLabel.setText(String.format("%.2f", playSpeed));
 				controller.increaseSpeed();
 			}
 		};
