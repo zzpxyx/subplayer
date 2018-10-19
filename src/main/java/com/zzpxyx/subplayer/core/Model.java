@@ -103,7 +103,16 @@ public class Model extends Observable {
 		});
 	}
 
-	public synchronized void jumpToEvent(int newEventIndex) {
+	public synchronized void jumpToTime(long eventTime) {
+		int eventIndex = Collections.binarySearch(eventList, new Event(Event.Type.Dummy, eventTime, ""));
+		if (eventIndex < 0) {
+			// Exact event not found. An "insertion point" is returned.
+			eventIndex = -eventIndex - 2; // Index of the previous event of the target time.
+		}
+		jumpToEvent(eventIndex);
+	}
+
+	private synchronized void jumpToEvent(int newEventIndex) {
 		pauseRunResume(() -> {
 			// Adjust start point.
 			currentEventIndex = newEventIndex;
@@ -121,15 +130,6 @@ public class Model extends Observable {
 			setChanged();
 			notifyObservers(update);
 		});
-	}
-
-	public synchronized void jumpToTime(long eventTime) {
-		int eventIndex = Collections.binarySearch(eventList, new Event(Event.Type.Dummy, eventTime, ""));
-		if (eventIndex < 0) {
-			// Exact event not found. An "insertion point" is returned.
-			eventIndex = -eventIndex - 2; // Index of the previous event of the target time.
-		}
-		jumpToEvent(eventIndex);
 	}
 
 	private synchronized void pauseRunResume(Runnable runnable) {

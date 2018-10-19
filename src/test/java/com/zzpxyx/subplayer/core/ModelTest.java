@@ -144,6 +144,22 @@ class ModelTest implements Observer {
 		});
 	}
 
+	@Test
+	void testJumpToTime() {
+		runTest("Test.srt", "JumpToTime.out", () -> {
+			startTimestamp = System.currentTimeMillis();
+			try {
+				model.jumpToTime(100);
+				model.play();
+				Thread.sleep(50);
+				model.jumpToTime(150);
+				latch.await();
+			} catch (InterruptedException e) {
+				// Test outcome is back or test went wrong. No need to do anything here.
+			}
+		});
+	}
+
 	@Override
 	public void update(Observable model, Object arg) {
 		if (arg instanceof Update) {
@@ -174,6 +190,7 @@ class ModelTest implements Observer {
 	private List<Event> parseOutputFile(String fileName) {
 		List<Event> textList = new LinkedList<>();
 		try (Stream<String> stream = Files.lines(Paths.get(fileName))) {
+			// Each line is time^text, where time is the time mark, not interval.
 			textList = stream.map(s -> parseEvent(s)).collect(Collectors.toList());
 		} catch (IOException e) {
 			e.printStackTrace();
