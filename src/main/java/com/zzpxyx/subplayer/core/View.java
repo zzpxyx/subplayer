@@ -86,7 +86,7 @@ public class View implements Observer {
 	private int mouseCurrentX;
 	private int mouseCurrentY;
 	private int playSpeed = 100; // Percent.
-	private long totalPlayTime;
+	private long totalPlayTime = 0;
 	private boolean isPlaying = false;
 	private boolean isButtonVisible = true;
 	private List<String> text = new LinkedList<String>();
@@ -515,8 +515,13 @@ public class View implements Observer {
 						} while (bufferStrategy.contentsLost());
 						break;
 					}
-					seekBar.setValue((int) (update.time * SEEKBAR_MAX / totalPlayTime));
-					currentTimeLabel.setText(formatDuration(update.time));
+					if (totalPlayTime == 0) {
+						seekBar.setValue(0);
+						currentTimeLabel.setText("0:00:00");
+					} else {
+						seekBar.setValue((int) (update.time * SEEKBAR_MAX / totalPlayTime));
+						currentTimeLabel.setText(formatDuration(update.time));
+					}
 				}
 			});
 		}
