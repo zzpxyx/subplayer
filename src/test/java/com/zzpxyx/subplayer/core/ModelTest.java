@@ -133,11 +133,10 @@ class ModelTest implements Observer {
 		runTest("Test.srt", "IncreaseDecreaseSpeed.out", () -> {
 			startTimestamp = System.currentTimeMillis();
 			try {
-				model.adjustSpeed(0.02);
-				model.adjustSpeed(0.08);
+				model.setSpeed(90);
 				model.play();
 				Thread.sleep(150);
-				model.adjustSpeed(-0.6);
+				model.setSpeed(200);
 				latch.await();
 			} catch (InterruptedException e) {
 				// Test outcome is back or test went wrong. No need to do anything here.

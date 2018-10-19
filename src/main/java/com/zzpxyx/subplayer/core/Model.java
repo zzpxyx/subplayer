@@ -20,7 +20,7 @@ public class Model extends Observable {
 	private long currentEventElapsedTime = 0;
 	private long currentEventSystemTimestamp; // Auxiliary timestamp for time axis stabilization.
 	private long offset = 0;
-	private double speed = 1;
+	private int speed = 100; // Percent.
 
 	public Model() {
 		eventList.add(new Event(Event.Type.Dummy, 0, ""));
@@ -97,9 +97,9 @@ public class Model extends Observable {
 		});
 	}
 
-	public synchronized void adjustSpeed(double increment) {
+	public synchronized void setSpeed(int newSpeed) {
 		pauseRunResume(() -> {
-			speed += increment;
+			speed = newSpeed;
 		});
 	}
 
@@ -148,7 +148,9 @@ public class Model extends Observable {
 	}
 
 	private synchronized long getNextEventDelay() {
-		return Math.round((eventList.get(currentEventIndex + 1).time - eventList.get(currentEventIndex).time) * speed);
+		assert currentEventIndex < eventList.size();
+		return Math.round(
+				(eventList.get(currentEventIndex + 1).time - eventList.get(currentEventIndex).time) * 100d / speed);
 	}
 
 	/**

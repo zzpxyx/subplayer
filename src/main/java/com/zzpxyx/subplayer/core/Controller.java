@@ -47,12 +47,8 @@ public class Controller {
 		model.next();
 	}
 
-	public void decreaseSpeed() {
-		model.adjustSpeed(0.02);
-	}
-
-	public void increaseSpeed() {
-		model.adjustSpeed(-0.02);
+	public void setSpeed(int newSpeed) {
+		model.setSpeed(newSpeed);
 	}
 
 	public void jumpToEvent(int newEventIndex) {

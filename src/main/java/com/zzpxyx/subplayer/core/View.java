@@ -44,11 +44,14 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JSpinner;
+import javax.swing.JSpinner.NumberEditor;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import com.zzpxyx.subplayer.config.Config;
@@ -65,8 +68,6 @@ public class View implements Observer {
 	private static final String STOP_EMOJI = "\u23F9\uFE0F";
 	private static final String FORWARD_EMOJI = "\u23E9\uFE0F";
 	private static final String NEXT_EMOJI = "\u23ED\uFE0F";
-	private static final String INCREASE_SPEED_EMOJI = "\u2795\uFE0F";
-	private static final String DECREASE_SPEED_EMOJI = "\u2796\uFE0F";
 	private static final String EXIT_EMOJI = "\u274C\uFE0F";
 
 	private static final int SEEKBAR_MAX = 10000;
@@ -84,8 +85,8 @@ public class View implements Observer {
 
 	private int mouseCurrentX;
 	private int mouseCurrentY;
+	private int playSpeed = 100; // Percent.
 	private long totalPlayTime;
-	private double playSpeed = 1;
 	private boolean isPlaying = false;
 	private boolean isButtonVisible = true;
 	private List<String> text = new LinkedList<String>();
@@ -106,8 +107,6 @@ public class View implements Observer {
 	private JButton stopButton = new JButton(STOP_EMOJI);
 	private JButton forwardButton = new JButton(FORWARD_EMOJI);
 	private JButton nextButton = new JButton(NEXT_EMOJI);
-	private JButton increaseSpeedButton = new JButton(INCREASE_SPEED_EMOJI);
-	private JButton decreaseSpeedButton = new JButton(DECREASE_SPEED_EMOJI);
 	private JButton exitButton = new JButton(EXIT_EMOJI);
 	private JPanel previewPanel = new JPanel(new BorderLayout());
 	private JPanel displayPanel = new JPanel() {
@@ -148,7 +147,7 @@ public class View implements Observer {
 	private JProgressBar seekBar = new JProgressBar();
 	private JLabel currentTimeLabel = new JLabel("0:00:00");
 	private JLabel totalTimeLabel = new JLabel("0:00:00");
-	private JSpinner playSpeedSpinner = new JSpinner(new SpinnerNumberModel(1, 0.02, 2, 0.02));
+	private JSpinner playSpeedSpinner = new JSpinner(new SpinnerNumberModel(100, 50, 200, 2));
 
 	public View(Properties config) {
 		DEFAULT_FONT = new Font("sans-serif", Font.BOLD, Integer.parseInt(config.getProperty(Config.FONT_SIZE)));
@@ -221,7 +220,9 @@ public class View implements Observer {
 			}
 		});
 
-		((JSpinner.DefaultEditor) playSpeedSpinner.getEditor()).getTextField().setEditable(false);
+		NumberEditor playSpeedSpinnerEditor = (NumberEditor) playSpeedSpinner.getEditor();
+		playSpeedSpinnerEditor.getTextField().setEditable(false);
+		playSpeedSpinnerEditor.getFormat().setPositiveSuffix("%");
 
 		seekBar.setMaximum(SEEKBAR_MAX);
 
@@ -389,20 +390,30 @@ public class View implements Observer {
 		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("N"), ActionKey.Next);
 		displayPanel.getActionMap().put(ActionKey.Next, nextAction);
 
+		// Set speed.
+		playSpeedSpinner.addChangeListener(new ChangeListener() {
+
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				int newSpeed = (int) playSpeedSpinner.getValue();
+				if (newSpeed != playSpeed) {
+					controller.setSpeed(newSpeed);
+					playSpeed = newSpeed;
+				}
+			}
+		});
+
 		// Decrease speed.
 		Action decreaseSpeedAction = new AbstractAction() {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (playSpeed > 0.02) {
-					playSpeed -= 0.02;
-					// playSpeedLabel.setText(String.format("%.2f", playSpeed));
-					controller.decreaseSpeed();
+				if (playSpeed > 50) {
+					playSpeedSpinner.setValue(playSpeed - 2);
 				}
 			}
 		};
-		decreaseSpeedButton.addActionListener(decreaseSpeedAction);
 		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("D"),
 				ActionKey.DescreaseSpeed);
 		displayPanel.getActionMap().put(ActionKey.DescreaseSpeed, decreaseSpeedAction);
@@ -413,12 +424,11 @@ public class View implements Observer {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				playSpeed += 0.02;
-				// playSpeedLabel.setText(String.format("%.2f", playSpeed));
-				controller.increaseSpeed();
+				if (playSpeed < 200) {
+					playSpeedSpinner.setValue(playSpeed + 2);
+				}
 			}
 		};
-		increaseSpeedButton.addActionListener(increaseSpeedAction);
 		displayPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("I"),
 				ActionKey.IncreaseSpeed);
 		displayPanel.getActionMap().put(ActionKey.IncreaseSpeed, increaseSpeedAction);
