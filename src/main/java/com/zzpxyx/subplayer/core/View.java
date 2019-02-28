@@ -2,7 +2,6 @@ package com.zzpxyx.subplayer.core;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -60,20 +59,19 @@ import com.zzpxyx.subplayer.event.Update;
 import com.zzpxyx.subplayer.parser.AdaptiveParser;
 
 public class View implements Observer {
-	private static final String OPEN_EMOJI = "\uD83D\uDDC1\uFE0F";
-	private static final String PREVIOUS_EMOJI = "\u23EE\uFE0F";
-	private static final String BACKWARD_EMOJI = "\u23EA\uFE0F";
-	private static final String PLAY_EMOJI = "\u25B6\uFE0F";
-	private static final String PAUSE_EMOJI = "\u23F8\uFE0F";
-	private static final String STOP_EMOJI = "\u23F9\uFE0F";
-	private static final String FORWARD_EMOJI = "\u23E9\uFE0F";
-	private static final String NEXT_EMOJI = "\u23ED\uFE0F";
-	private static final String EXIT_EMOJI = "\u274C\uFE0F";
-
+	private static final String OPEN_EMOJI = "O";
+	private static final String PREVIOUS_EMOJI = "|<<";
+	private static final String BACKWARD_EMOJI = "<<";
+	private static final String PLAY_EMOJI = ">";
+	private static final String PAUSE_EMOJI = "||";
+	private static final String STOP_EMOJI = "><";
+	private static final String FORWARD_EMOJI = ">>";
+	private static final String NEXT_EMOJI = ">>|";
+	private static final String EXIT_EMOJI = "X";
 	private static final int SEEKBAR_MAX = 10000;
-
+	private static final Dimension BUTTON_DIMENSION = new Dimension(60, 24);
 	private static final Color NO_COLOR = new Color(0, 0, 0, 0);
-	private final Font DEFAULT_FONT;
+	private static final Font BUTTON_FONT = new Font(Font.MONOSPACED, Font.BOLD, 12);
 
 	private static enum ActionKey {
 		Open, PlayOrPause, Stop, Backward, Forward, Previous, Next, DescreaseSpeed, IncreaseSpeed, Exit, ShowHideButtons
@@ -91,9 +89,11 @@ public class View implements Observer {
 	private boolean isButtonVisible = true;
 	private List<String> text = new LinkedList<String>();
 	private List<Event> eventList;
+	private List<JButton> buttonList = new LinkedList<JButton>();
 	private BufferStrategy bufferStrategy;
 	private RenderMethod renderMethod;
 	private Color displayColor = Color.BLACK;
+	private Font displayFont;
 	private JFrame frame = new JFrame("SubPlayer");
 	private JFileChooser fileChooser = new JFileChooser();
 	private JComboBox<String> encodingComboBox = new JComboBox<>(
@@ -126,7 +126,7 @@ public class View implements Observer {
 						RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 				graphics2d.setBackground(displayColor);
 				graphics2d.clearRect(0, 0, componentWidth, componentHeight);
-				graphics2d.setFont(DEFAULT_FONT);
+				graphics2d.setFont(displayFont);
 				FontMetrics fontMetrics = graphics2d.getFontMetrics();
 				synchronized (View.this) {
 					for (String line : text) {
@@ -150,7 +150,7 @@ public class View implements Observer {
 	private JSpinner playSpeedSpinner = new JSpinner(new SpinnerNumberModel(100, 50, 200, 2));
 
 	public View(Properties config) {
-		DEFAULT_FONT = new Font("sans-serif", Font.BOLD, Integer.parseInt(config.getProperty(Config.FONT_SIZE)));
+		displayFont = new Font(Font.SANS_SERIF, Font.BOLD, Integer.parseInt(config.getProperty(Config.FONT_SIZE)));
 
 		if (System.getProperty("os.name").toLowerCase().startsWith("linux")) {
 			renderMethod = RenderMethod.Advanced;
@@ -220,6 +220,20 @@ public class View implements Observer {
 			}
 		});
 
+		buttonList.add(openButton);
+		buttonList.add(exitButton);
+		buttonList.add(playOrPauseButton);
+		buttonList.add(stopButton);
+		buttonList.add(backwardButton);
+		buttonList.add(forwardButton);
+		buttonList.add(previousButton);
+		buttonList.add(nextButton);
+		for (JButton button : buttonList) {
+			button.setPreferredSize(BUTTON_DIMENSION);
+			button.setFont(BUTTON_FONT);
+			button.setFocusable(false);
+		}
+
 		NumberEditor playSpeedSpinnerEditor = (NumberEditor) playSpeedSpinner.getEditor();
 		playSpeedSpinnerEditor.getTextField().setEditable(false);
 		playSpeedSpinnerEditor.getFormat().setPositiveSuffix("%");
@@ -262,12 +276,6 @@ public class View implements Observer {
 		constraints.insets = new Insets(10, 10, 10, 10);
 		constraints.gridx = 11;
 		controlPanel.add(totalTimeLabel, constraints);
-
-		for (Component component : controlPanel.getComponents()) {
-			if (component instanceof JButton) {
-				component.setFocusable(false);
-			}
-		}
 
 		Container contentPane = frame.getContentPane();
 		contentPane.add(displayPanel, BorderLayout.CENTER);
