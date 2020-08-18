@@ -26,15 +26,17 @@ Depending on your system, you may be able to double click on the jar file and la
 From left to right, the buttons on the user interface are:
 
 - Open: open a subtitle file. Shortcut key "O".
+- Exit: exit the application. Shortcut key "ESC".
 - Play/Pause: play or pause the playing. Shortcut key "Space".
 - Stop: stop the playing. Shortcut key "S".
-- Backward: jump back 50 ms so that the next subtitle is delayed 50 ms. Shortcut key "B".
-- Forward: jump ahead 50 ms so that the next subtitle appears 50 ms earlier. Shortcut key "F".
+- Backward: jump back 50ms so that the next subtitle is delayed 50ms. Shortcut key "B".
+- Forward: jump ahead 50ms so that the next subtitle appears 50ms earlier. Shortcut key "F".
 - Previous: jump back to the previous subtitle. Shortcut key "P".
 - Next: jump ahead to the next subtitle. Shortcut key "N".
-- Decrease speed: decrease the playing speed by 2%. Shortcut key "D".
-- Increase speed: increase the playing speed by 2%. Shortcut key "I".
-- Exit: exit the application. Shortcut key "ESC".
+
+The spinner shows the play speed. By default, it will show "100%". The up and down arrow buttons (shortcut keys "I" and "D") near it can increase or decrease the play speed by 2% each click.
+
+Clicking on the seek bar will jump to the subtitle at that time mark. 
 
 Double clicking on the black displaying area will make the window transparent. Double click again to restore. Shortcut key "H".
 
