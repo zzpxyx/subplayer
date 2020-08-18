@@ -228,6 +228,7 @@ class ModelTest implements Observer {
 			Event event1 = iterator1.next();
 			Event event2 = iterator2.next();
 			if (Math.abs(event1.time - event2.time) > eventTimeErrorRange || !event1.text.equals(event2.text)) {
+				System.out.println("Failed event: " + event1 + "<->" + event2);
 				return false;
 			}
 		}
