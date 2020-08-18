@@ -4,12 +4,6 @@ SubPlayer
 
 A simple subtitle player.
 
-## Notice
-This application is under heavy development. Currently, it is only a working prototype with many limitations such as:
-
-- Rudimentary user interface.
-- Limited user settings.
-
 ## Build
 The [project's release page on GitHub](https://github.com/zzpxyx/subplayer/releases) has pre-built packages.
 

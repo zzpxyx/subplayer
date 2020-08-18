@@ -16,6 +16,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 
@@ -25,8 +26,8 @@ import com.zzpxyx.subplayer.parser.SrtParser;
 
 class ModelTest implements Observer {
 	private static final String RESOURCE_PATH = "src/test/resources/";
-	private static final long EVENT_TIME_ERROR_RANGE = 5;
 	private static final long TIMEOUT_MARGIN = 1000;
+	private static final int SAMPLE_ROUNDS = 10;
 
 	private List<Event> eventList;
 	private List<Event> expectedList;
@@ -34,6 +35,18 @@ class ModelTest implements Observer {
 	private CountDownLatch latch;
 	private Model model;
 	private long startTimestamp;
+	private static long eventTimeErrorRange;
+
+	@BeforeAll
+	static void initAll() throws InterruptedException {
+		long timestamp = System.currentTimeMillis();
+		for (int round = 0; round < SAMPLE_ROUNDS; round++) {
+			Thread.yield();
+			Thread.sleep(100);
+		}
+		eventTimeErrorRange = Math.abs(System.currentTimeMillis() - timestamp - 100 * SAMPLE_ROUNDS) + 5;
+		System.out.println("Event time error range: " + eventTimeErrorRange);
+	}
 
 	@Test
 	void testPlayPauseStop() {
@@ -214,7 +227,7 @@ class ModelTest implements Observer {
 		while (iterator1.hasNext()) {
 			Event event1 = iterator1.next();
 			Event event2 = iterator2.next();
-			if (Math.abs(event1.time - event2.time) > EVENT_TIME_ERROR_RANGE || !event1.text.equals(event2.text)) {
+			if (Math.abs(event1.time - event2.time) > eventTimeErrorRange || !event1.text.equals(event2.text)) {
 				return false;
 			}
 		}
